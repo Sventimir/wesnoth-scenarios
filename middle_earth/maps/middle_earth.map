@@ -1020,14 +1020,14 @@ victory_when_enemies_defeated=yes
 [item]
 	image="scenery/mine-abandoned.png"
 	visible_in_fog=yes
-	x=60
-	y=27
+	x=59
+	y=41
 [/item]
 [item]
 	image="scenery/mine-abandoned.png"
 	visible_in_fog=yes
-	x=59
-	y=41
+	x=60
+	y=27
 [/item]
 [item]
 	image="scenery/nest-full.png"
