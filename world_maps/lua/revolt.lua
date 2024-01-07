@@ -1,8 +1,10 @@
 local recruit_costs = {
-  { 8, 8, 8, 12, 12, 18 },
-  { 12, 12, 12, 18, 18, 27 },
-  { 18, 18, 18, 27, 27, 40 },
-  { 27, 27, 27, 40, 40, 60 }
+  [-1] = { 8, 8, 8, 12, 12, 18 },
+  [0]  = { 12, 12, 12, 18, 18, 27 },
+  [1]  = { 16, 16, 16, 24, 24, 36 },
+  [2]  = { 20, 20, 20, 30, 30, 45 },
+  [3]  = { 24, 24, 24, 36, 36, 54 },
+  [4]  = { 30, 30, 30, 45, 45, 75 }
 }
 local recuit_types = {
   [8] = { "Peasant", "Woodsman", "Ruffian" },
@@ -17,15 +19,12 @@ if village.owner_side and village.owner_side < 8 then
   
   local viewer, _ = wesnoth.get_viewing_side()
   local occupant = wesnoth.units.get(village.x, village.y)
-  local occupant_level = 0
-  local treshold = 10  -- 2d8 + 10 + 8 * (occupant's level + 1)
+  local occupant_level = -1
   if occupant then
-    occupant_level = occupant.level + 1
-    treshold = treshold + occupant_level * 8
+    occupant_level = occupant.level
   end
-  for i = 0, 2, 1 do  
-    treshold = treshold + mathx.random(1, 8)
-  end
+  local treshold = math.floor(1.25 * recruit_costs[occupant_level][1])
+  treshold = mathx.random(treshold, 2 * treshold)
   
   if village.unrest > treshold then
     while village.unrest > recruit_costs[occupant_level][1] do
