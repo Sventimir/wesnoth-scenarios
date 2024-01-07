@@ -69,7 +69,7 @@ if village.owner_side and village.owner_side < 8 then
         wesnoth.units.scroll_to(recruit)
         wesnoth.show_message_dialog({
             portrait = recruit.portrait,
-            title = recruit.name,
+            title = wesnoth.map.get_label(village),
             message = "Wszędzie ruchawka, zniszczenie i pożoga!"
         })
       end
