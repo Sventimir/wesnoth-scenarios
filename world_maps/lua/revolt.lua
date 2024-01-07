@@ -28,8 +28,8 @@ if village.owner_side and village.owner_side < 8 then
   end
   
   if village.unrest > treshold then
-    while village.unrest > recruit_cost[occupant_level][1] do
-      if village.unrest < recruit_cost[occupant_level][6] then
+    while village.unrest > recruit_costs[occupant_level][1] do
+      if village.unrest < recruit_costs[occupant_level][6] then
         recruit_costs[occupant_level][6] = nil
       end
       if village.unrest < recruit_cost[occupant_level][4] then
