@@ -31,7 +31,7 @@ if village.owner_side and village.owner_side < 8 then
       if village.unrest < recruit_costs[occupant_level][6] then
         recruit_costs[occupant_level][6] = nil
       end
-      if village.unrest < recruit_cost[occupant_level][4] then
+      if village.unrest < recruit_costs[occupant_level][4] then
         recruit_costs[occupant_level][5] = nil
         recruit_costs[occupant_level][4] = nil
       end
