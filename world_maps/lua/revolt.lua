@@ -1,4 +1,9 @@
-local recruit_costs = { 8, 8, 8, 12, 12, 18 }
+local recruit_costs = {
+  { 8, 8, 8, 12, 12, 18 },
+  { 12, 12, 12, 18, 18, 27 },
+  { 18, 18, 18, 27, 27, 40 },
+  { 27, 27, 27, 40, 40, 60 }
+}
 local recuit_types = {
   [8] = { "Peasant", "Woodsman", "Ruffian" },
   [12] = { "Spearman", "Bowman", "Footpad", "Thug", "Poacher"},
@@ -8,30 +13,30 @@ local recuit_types = {
 local village = wml.variables_proxy.village
 village.owner_side = wesnoth.map.get_owner(village)
 if village.owner_side and village.owner_side < 8 then
-  for i = 0, 2, 1 do
-    village.unrest = village.unrest + mathx.random(1, 6) -- +2d6
-  end
+  village.unrest = village.unrest + mathx.random(1, 4) -- +d4
   
   local viewer, _ = wesnoth.get_viewing_side()
   local occupant = wesnoth.units.get(village.x, village.y)
+  local occupant_level = 0
   local treshold = 10  -- 2d8 + 10 + 8 * (occupant's level + 1)
   if occupant then
-    treshold = treshold + (occupant.level + 1) * 8
+    occupant_level = occupant.level + 1
+    treshold = treshold + occupant_level * 8
   end
   for i = 0, 2, 1 do  
     treshold = treshold + mathx.random(1, 8)
   end
   
   if village.unrest > treshold then
-    while village.unrest > 8 do
-      if village.unrest < 18 then
-        recruit_costs[6] = nil
+    while village.unrest > recruit_cost[occupant_level][1] do
+      if village.unrest < recruit_cost[occupant_level][6] then
+        recruit_costs[occupant_level][6] = nil
       end
-      if village.unrest < 12 then
-        recruit_costs[5] = nil
-        recruit_costs[4] = nil
+      if village.unrest < recruit_cost[occupant_level][4] then
+        recruit_costs[occupant_level][5] = nil
+        recruit_costs[occupant_level][4] = nil
       end
-      local cost = mathx.random_choice(recruit_costs)
+      local cost = mathx.random_choice(recruit_costs[occupant_level])
       local recruit_type = mathx.random_choice(recuit_types[cost])
       local locations = {}
       local radius = -1
