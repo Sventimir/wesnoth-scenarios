@@ -1,42 +1,39 @@
-local recruit_costs = {
-  [-1] = { 8, 8, 8, 12, 12, 18 },
-  [0]  = { 12, 12, 12, 18, 18, 27 },
-  [1]  = { 16, 16, 16, 24, 24, 36 },
-  [2]  = { 20, 20, 20, 30, 30, 45 },
-  [3]  = { 24, 24, 24, 36, 36, 54 },
-  [4]  = { 30, 30, 30, 45, 45, 75 }
-}
+function recruitment_cost(occupant_level, level)
+  return (4 * occupant_level + 12) * (1.5 ^ level)
+end
+
+local recruit_levels = { 0, 0, 0, 1, 1, 2 }
 local recuit_types = {
-  [8] = { "Peasant", "Woodsman", "Ruffian" },
-  [12] = { "Spearman", "Bowman", "Footpad", "Thug", "Poacher"},
-  [18] = { "Lieutenant" }
+  [0] = { "Peasant", "Woodsman", "Ruffian" },
+  [1] = { "Spearman", "Bowman", "Footpad", "Thug", "Poacher"},
+  [2] = { "Lieutenant" }
 }
 
 local village = wml.variables_proxy.village
 village.owner_side = wesnoth.map.get_owner(village)
 if village.owner_side and village.owner_side < 8 then
-  village.unrest = village.unrest + mathx.random(1, 4) -- +d4
+  village.unrest = village.unrest + mathx.random(1, 6) -- +d6
   
-  local viewer, _ = wesnoth.get_viewing_side()
+  local viewer, _ = wesnoth.interface.get_viewing_side()
   local occupant = wesnoth.units.get(village.x, village.y)
   local occupant_level = -1
   if occupant then
     occupant_level = occupant.level
   end
-  local treshold = math.floor(1.25 * recruit_costs[occupant_level][1])
-  treshold = mathx.random(treshold, 2 * treshold)
+  local threshold = recruitment_cost(occupant_level, 0) * village.unrest_threshold / 10
   
-  if village.unrest > treshold then
-    while village.unrest > recruit_costs[occupant_level][1] do
-      if village.unrest < recruit_costs[occupant_level][6] then
-        recruit_costs[occupant_level][6] = nil
+  if village.unrest > threshold then
+    while village.unrest > recruitment_cost(occupant_level, 0) do
+      if village.unrest < recruitment_cost(occupant_level, 6) then
+        recruit_levels[6] = nil
       end
-      if village.unrest < recruit_costs[occupant_level][4] then
-        recruit_costs[occupant_level][5] = nil
-        recruit_costs[occupant_level][4] = nil
+      if village.unrest < recruitment_cost(occupant_level, 1) then
+        recruit_levels[5] = nil
+        recruit_levels[4] = nil
       end
-      local cost = mathx.random_choice(recruit_costs[occupant_level])
-      local recruit_type = mathx.random_choice(recuit_types[cost])
+      local level = mathx.random_choice(recruit_levels)
+      local cost = recruitment_cost(occupant_level, level)
+      local recruit_type = mathx.random_choice(recuit_types[level])
       local locations = {}
       local radius = -1
       while #locations == 0 do
@@ -49,7 +46,7 @@ if village.owner_side and village.owner_side < 8 then
       local recruit = wesnoth.units.create({
           type = recruit_type,
           side = 8,
-          canrecruit = cost == 18,
+          canrecruit = level == 2,
           x = locations[1].x,
           y = locations[1].y
       })
@@ -66,14 +63,16 @@ if village.owner_side and village.owner_side < 8 then
       end
       if not wesnoth.sides.is_fogged(viewer, locations[1]) then
         wesnoth.units.scroll_to(recruit)
+        local label = wesnoth.map.get_label(village)
         wesnoth.show_message_dialog({
             portrait = recruit.portrait,
-            title = wesnoth.map.get_label(village),
+            title = label.text,
             message = "Wszędzie ruchawka, zniszczenie i pożoga!"
         })
       end
       village.unrest = village.unrest - cost
     end
+    village.unrest_threshold = mathx.random(0, 30)
   end
 else
   village.unrest = 0
