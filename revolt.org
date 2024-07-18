@@ -1,0 +1,40 @@
+#+BEGIN_SRC elisp
+(defun recruitment-cost (occupant-level level)
+  (* (+ (* 4 occupant-level) 12) (expt 1.5 level)))
+
+(defun roll (die rolls)
+  (let ((result 0))
+    (dotimes (r rolls result)
+       (setq result (+ result (random (+ die 1))))))
+
+(defun random-choice (l)
+  (nth (- (random (+ (length l) 1)) 1) l))
+
+(let* ((recruit-levels '( 0 0 0 1 1 2 ))
+       (recruit-types '(( peasant woodsman ruffian )
+                        ( spearman bowman footpad thug poacher )
+                        ( lieutenant )))
+       (threshold-base (- (random 32) 1))
+       (unrest 0)
+       (occupant-level -1)
+       (threshold (* threshold-base 0.1 (recruitment-cost occupant-level 0)))
+       (revolters nil)
+       (results '(turn threshold unrest revolters)))
+    (dotimes (turn 100 (reverse results))
+      (setq revolters nil
+            unrest (+ unrest (roll 6 1))
+            threshold (* threshold-base 0.1 (recruitment-cost occupant-level 0)))
+      (if (> unrest threshold)
+         (while (> unrest (recruitment-cost occupant-level, 1))
+           (let* ((level (random-choice
+                           (seq-filter
+                             (lambda (l) (> unrest (recruitment-cost occupant-level l))
+                             recruit-levels)))
+                  (cost (recruitment-cost occupant-level level)))
+             (push (random-choice (nth level recruit-types)) revolters)
+             (setq unrest (- unrest cost))
+           nil)
+        (push (list turn threshold unrest revolters) results))))))
+#+END_SRC
+
+#+RESULTS:
