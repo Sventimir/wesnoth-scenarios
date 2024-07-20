@@ -20,5 +20,6 @@ local messages = {
 
 aab_run_dialog(
   wesnoth.units.find({ side = player_sides, canrecruit = true }),
-  messages
+  messages,
+  mathx.random(1, players_count)
 )
