@@ -9,8 +9,10 @@ function aab_run_dialog(speakers, messages, first_speaker, next_speaker)
   local current_speaker = first_speaker or 1
   local current_message = 1
   while current_message <= #messages do
+    local speaker = speakers[current_speaker]
     wesnoth.show_message_dialog({
-      portrait = speakers[current_speaker].portrait,
+      portrait = speaker.portrait,
+      title = speaker.name,
       message = messages[current_message]
     })
     current_message = current_message + 1
