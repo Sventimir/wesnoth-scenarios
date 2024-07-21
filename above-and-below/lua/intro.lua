@@ -18,8 +18,11 @@ local messages = {
   "W drogę. Nie ma czasu do stracenia."
 }
 
+local leaders = wesnoth.units.find_on_map({ side = player_sides, canrecruit = true })
+mathx.shuffle(leaders)
+
 aab_run_dialog(
-  wesnoth.units.find({ side = player_sides, canrecruit = true }),
+  leaders,
   messages,
   mathx.random(1, players_count)
 )
