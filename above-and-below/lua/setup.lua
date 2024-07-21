@@ -21,20 +21,18 @@ function aab_run_dialog(speakers, messages, first_speaker, next_speaker)
 end
 
 -- Put guardians in dwarven villages.
-function spawn_dwarven_guards(dwarves) 
-  local dwarven_villages = wesnoth.map.find({
-      area = "dwarven-land",
-      gives_income = true
-  })
+local dwarven_villages = wesnoth.map.find({
+    area = "dwarven-land",
+    gives_income = true
+})
 
-  for _, village in ipairs(dwarven_villages) do
-    wesnoth.map.set_owner(village, dwarves)
-    guard = wesnoth.units.create({
-        type = "Dwarvish Guardsman",
-        side = dwarves,
-        x = village.x,
-        y = village.y
-    })
-    wesnoth.units.to_map(guard)
-  end
+for _, village in ipairs(dwarven_villages) do
+  wesnoth.map.set_owner(village, dwarves)
+  guard = wesnoth.units.create({
+      type = "Dwarvish Guardsman",
+      side = dwarves,
+      x = village.x,
+      y = village.y
+  })
+  wesnoth.units.to_map(guard)
 end
