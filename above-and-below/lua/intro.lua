@@ -6,7 +6,7 @@ local messages = {
   "Nie będzie to łatwe. Słyszałem, że te góry są nawiedzone.",
   "Owszem, a do tego pełne niebezpieczeństw, z których najmniejszym są żyjące tu krasnoludy.",
   "W każdym razie pod względem wzrostu.",
-  "Tak.",
+  "Dziękuję ci za objaśnienie tego żartu. To wspaniałe mieć kogoś takiego jak ty.",
   "…",
   "Przed nami tyle różnych dróg.",
   "Uuuuu…",
