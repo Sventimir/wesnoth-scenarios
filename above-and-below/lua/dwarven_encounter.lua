@@ -79,10 +79,10 @@ if wml.variables_proxy.pay_the_toll then
       message = "Interesy z wami to prawdziwa przyjemność. Przepuścić ich, chłopcy! A może potrzebujecie najemników? Wiem, że niejeden z nas chętnie zaciągnie się przygodą. Na przygodę? Ha. nieważne! Krasnolud nie gardzi złotem."
   })
   local dwarves_side = wesnoth.sides.get(dwarves)
-  dwarves_side.team_name = "Bohaterowie"
+  dwarves_side.team_name = 1
   dwarves_side.gold = dwarves_side.gold + toll
 
-  for side in wesnoth.sides.iter({side = player_sides}) do
+  for side in wesnoth.sides.iter({ side = player_sides }) do
     units = wesnoth.units.find_on_map({ side = side.side })
     local amount = #units * 10
     side.gold = side.gold - amount
@@ -92,6 +92,19 @@ if wml.variables_proxy.pay_the_toll then
         extra_recruit="Dwarvish Guardsman,Dwarvish Fighter,Dwarvish Thunderer,Dwarvish Scout,Dwarvish Ulfserker"
     })
   end
+
+  wesnoth.wml_actions.micro_ai({
+      side = necromancers,
+      ca_id = "bat_north_hunter",
+      ai_type = "bottleneck_defense",
+      action = "delete"
+  })
+  wesnoth.wml_actions.micro_ai({
+      side = necromancers,
+      ca_id = "bat_south_hunter",
+      ai_type = "bottleneck_defense",
+      action = "delete"
+  })
 else
   messages = {
     "Tylko spróbujcie, a dowiecie się, jakie to nieprzyjemne uczucie nosić gips.",
