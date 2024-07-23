@@ -38,7 +38,7 @@ for _, village in ipairs(dwarven_villages) do
 end
 
 function make_tactics(side)
-  local obj = { side = side, total_count = 0, total_weight = 0 }
+  local obj = { side = side, total_weight = 0 }
 
   function obj:all()
     return wml.array_access.get("tactics.tactic", wesnoth.sides[self.side].variables)
@@ -60,7 +60,6 @@ function make_tactics(side)
     -- sadly, with different access methods, arrays are indexed differently :/
     local v = string.format("tactics.tactic[%d].count", tactic.index - 1)
     wesnoth.sides[self.side].variables[v] = tactic.value.count + value
-    self.total_count = self.total_count + value
   end
 
   function obj:set_role(role, unit)
@@ -102,7 +101,6 @@ function make_tactics(side)
   end
   
   for _, tactic in ipairs(obj:all()) do
-    obj.total_count = obj.total_count + tactic.count
     obj.total_weight = obj.total_weight + tactic.weight
   end
 
