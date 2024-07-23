@@ -37,60 +37,93 @@ for _, village in ipairs(dwarven_villages) do
   wesnoth.units.to_map(guard)
 end
 
--- The following 2 functions are extremely messy due to using a mixture of
--- a deprecated and new API for accessing WML variables. The new API is 
--- cleaner, nicer and generally better, but it seems unable to update variables.
--- This should be refactored to use the new API only as soon as possible.
--- In particular, the old API, unlike LUA standard library, starts array indices
--- from 0 rather than 1. This is not the case with new API, so we need to convert
--- indices by subtracting 1. Please, take this code away before I vomit.
-function choose_tactic(unit)
-  local tactics = wesnoth.sides.get(unit.side).variables.tactics
-  local idx = nil
-  if tactics == nil then
-    return
+function make_tactics(side)
+  local obj = { side = side, total_count = 0, total_weight = 0 }
+
+  function obj:all()
+    return wml.array_access.get("tactics.tactic", wesnoth.sides[self.side].variables)
   end
-  if tactics.total_count > 0 then
-    for i, t in ipairs(tactics) do
-      if t[2].count > 0 then
-        idx = i
-        break
+
+  function obj:find(role)
+    for i, tactic in ipairs(self:all()) do
+      if tactic.role == role then
+        return { index = i, value = tactic}
       end
     end
   end
-  if idx == nil then
-    local c = mathx.random(1, tactics.total_weight)
-    for i, t in ipairs(tactics) do
-      c = c - t[2].weight
-      if c <= 0 then
-        idx = i
-        break
-      end
+
+  function obj:adjust_count(role, value)
+    local tactic = self:find(role)
+    if tactic == nil then
+      return
+    end
+    -- sadly, with different access methods, arrays are indexed differently :/
+    local v = string.format("tactics.tactic[%d].count", tactic.index - 1)
+    wesnoth.sides[self.side].variables[v] = tactic.value.count + value
+    self.total_count = self.total_count + value
+  end
+
+  function obj:set_role(role, unit)
+    if role == nil then
+      return
+    end
+    wesnoth.wml_actions.role({
+        id = unit.id,
+        role = role
+    })
+  end
+
+  function obj:choose_random(unit)
+    local idx = mathx.random(1, self.total_weight)
+    for _, tactic in ipairs(self:all()) do
+      if idx <= tactic.weight then
+        self:set_role(tactic.role, unit)
+        self:adjust_count(tactic.role, -1)
+        return
+      else
+        idx = idx - tactic.weight
+      end        
     end
   end
-  if idx == nil or tactics[idx][2].role == nil then
-    return
+
+  function obj:choose_most_required(unit)
+    local most_needed = { role = nil, count = 0 }
+    for _, tactic in ipairs(self:all()) do
+      if tactic.count > most_needed.count then
+        most_needed = tactic
+      end
+    end
+    if most_needed.role == nil then
+      self:choose_random(unit)
+    else
+      self:set_role(most_needed.role, unit)
+      self:adjust_count(most_needed.role, -1)
+    end
   end
-  wesnoth.wml_actions.role({
-      id=unit.id,
-      role=tactics[idx][2].role
-  })
-  local addr = string.format("tactics.tactic[%d].count", idx - 1)
-  wesnoth.set_side_variable(unit.side, addr, tactics[idx][2].count - 1)
-  wesnoth.set_side_variable(unit.side, "tactics.total_count", tactics.total_count - 1)
+  
+  for _, tactic in ipairs(obj:all()) do
+    obj.total_count = obj.total_count + tactic.count
+    obj.total_weight = obj.total_weight + tactic.weight
+  end
+
+  return obj
 end
 
-function request_replacement(unit)
-  local tactics = wesnoth.sides.get(unit.side).variables.tactics
-  if unit.role == nil or tactics == nil then
+tactics = {}
+for side in wesnoth.sides.iter() do
+  if side.variables.tactics ~= nil then
+    tactics[side.side] = make_tactics(side.side)
+  end
+end
+
+function choose_tactic(unit)
+  local side = unit.side
+  if tactics[side] == nil then
     return
   end
-  for _, tactic in ipairs(tactics) do
-    if tactic[1].role == unit.role then
-      local addr = string.format("tactics.tactic[%d].count", idx)
-      wesnoth.set_side_variable(unit.side, addr, tactic[1].count + 1)
-      wesnoth.set_side_variable(unit.side, "tactics.total_count", tactics.total_count + 1)
-      break
-    end
+  if side == dwarves then
+    tactics[side]:choose_most_required(unit)
+  else
+    tactics[side]:choose_random(unit)
   end
 end
