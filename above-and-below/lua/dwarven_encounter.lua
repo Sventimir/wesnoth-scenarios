@@ -12,6 +12,15 @@ wesnoth.wml_actions.move_unit({
     to_y = scout.y,
     fire_event = false
 })
+local locations = wesnoth.map.find({
+    x = dwarf_lord.x,
+    y = dwarf_lord.y,
+    radius = 2
+})
+for side in wesnoth.sides.iter({ side = player_sides }) do
+  side:remove_shroud(locations)
+  side:remove_fog(locations)
+end
 
 local messages = {
     "A cóż to za przybysze starają się wkroczyć na nasz ziemie? Ani kroku dalej!",
@@ -28,14 +37,6 @@ aab_run_dialog(speakers, messages)
 local units = wesnoth.units.find_on_map({ side = player_sides })
 local toll = #units * 10
 
--- Have to copy the table by hand, because modification would affect the original too.
-local other_players = {}
-for _, value in pairs(player_sides) do
-  if value ~= negotiating_side then
-    table.insert(other_players, value)
-  end
-end
-
 local total_funds = 0
 for side in wesnoth.sides.iter({ side = player_sides }) do
   total_funds = total_funds + side.gold
@@ -45,7 +46,7 @@ local choice = {
   speaker = negotiator.id,
   side_for = negotiator.side,
   variable = "pay_the_toll",
-  wait_description = string.format("%s rozważa propozycję krasnoluda", dwarf_lord.name)
+  wait_description = string.format("%s rozważa propozycję krasnoluda.", negotiator.name)
 }
 
 local answers = {}
@@ -64,10 +65,14 @@ for val, msg in pairs(answers) do
 end
 
 wesnoth.wml_actions.message(choice)
-for _, side in ipairs(other_players) do
+local others = wesnoth.sides.find({
+    side = player_sides,
+    { "not", { side = negotiating_side } }
+})
+for _, side in ipairs(others) do
   wesnoth.wml_actions.message({
       speaker = negotiator.id,
-      side_for = side,
+      side_for = side.side,
       message = answers[wml.variables_proxy.pay_the_toll]
   })
 end
@@ -96,12 +101,12 @@ if wml.variables_proxy.pay_the_toll then
   wesnoth.wml_actions.micro_ai({
       side = necromancers,
       ca_id = "bat_north_hunter",
-      ai_type = "bottleneck_defense",
+      ai_type = "zone_guardian",
       action = "delete"
   })
   wesnoth.wml_actions.micro_ai({
       side = necromancers,
-      ca_id = "bat_south_hunter",
+      ca_id = "zone_guardian",
       ai_type = "bottleneck_defense",
       action = "delete"
   })
@@ -124,5 +129,5 @@ wesnoth.wml_actions.move_unit({
 
 wesnoth.wml_actions.allow_extra_recruit({
     id = dwarf_lord.id,
-    extra_recruit="Dwarvish Fighter,Dwarvish Thunderer,Dwarvish Scout"
+    extra_recruit="Dwarvish Fighter,Dwarvish Scout"
 })
