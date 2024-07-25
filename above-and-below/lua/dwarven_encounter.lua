@@ -27,15 +27,15 @@ local messages = {
     "Spokojnie, nie mamy złych zamiarów. Przybyliśmy tu w pokoju.",
     "Wasze zamiary niewiele mnie interesują, mówiąc oględnie. Na tym szlaku pobieramy myto. Płacisz - przechodzisz. Nie płacisz - zawracasz. Proste.",
     "Ile chcecie?",
-    "Dziesięć sztuk złota od łebka.",
-    "Dzięć sztuk złota od łebka? Widzisz ilu nas jest?",
+    string.format("%d sztuk złota od łebka.", wml.variables.toll_per_unit),
+    string.format("%d sztuk złota od łebka? Widzisz ilu nas jest?", wml.variables.toll_per_unit),
     "Możecie spróbować przejść bez płacenia. Po tej operacji z pewnością będzie was mniej. Kto wie może nawet będzie was stać na myto? Chociaż mówiąc szczerze nie wyglądacie na szczególnie majętnych. Tak czy inaczej, opłata nie podlega negocjacjom.", 
 }
 local speakers = {dwarf_lord, negotiator}
 aab_run_dialog(speakers, messages)
 
 local units = wesnoth.units.find_on_map({ side = player_sides })
-local toll = #units * 10
+local toll = #units * wml.variables.toll_per_unit
 
 local total_funds = 0
 for side in wesnoth.sides.iter({ side = player_sides }) do
