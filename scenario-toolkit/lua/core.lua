@@ -53,3 +53,4 @@ function display_table(t)
 end
 
 int = require("int")
+str = require("str")
