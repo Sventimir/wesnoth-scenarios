@@ -94,7 +94,7 @@ if wml.variables_proxy.pay_the_toll then
     local leader = wesnoth.units.find_on_map({ side = side.side, canrecruit = true })[1]
     wesnoth.wml_actions.allow_extra_recruit({
         id = leader.id,
-        extra_recruit="Dwarvish Guardsman,Dwarvish Fighter,Dwarvish Thunderer,Dwarvish Scout,Dwarvish Ulfserker"
+        extra_recruit="Dwarvish Guardsman,aab_Dwarvish_Warrior,Dwarvish Thunderer,Dwarvish Scout,Dwarvish Ulfserker"
     })
   end
 
@@ -129,5 +129,5 @@ wesnoth.wml_actions.move_unit({
 
 wesnoth.wml_actions.allow_extra_recruit({
     id = dwarf_lord.id,
-    extra_recruit="Dwarvish Fighter,Dwarvish Scout"
+    extra_recruit="aab_Dwarvish_Warrior,Dwarvish Scout"
 })
