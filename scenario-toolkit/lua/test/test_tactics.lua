@@ -1,9 +1,9 @@
 require("test/assert")
 require("../wesnoth-mock")
-tactics = require("../ai_tactics")
 
 wesnoth.sides.create(1)
 wesnoth.sides[1].variables.tactics = {
+  type = "most_required",
   tactic = {
     {
       role = "role1",
@@ -30,6 +30,7 @@ wesnoth.sides[1].variables.tactics = {
 
 wesnoth.sides.create(2)
 wesnoth.sides[2].variables.tactics = {
+  type = "random",
   tactic = {
     {
       role = "role1",
@@ -66,14 +67,14 @@ wesnoth.units.create({
   role = nil
 })
 
-t = tactics.most_required(tactics.base(1))
-role3 = t:find("role3").value
+tactics = require("../ai_tactics")
+
+role3 = tactics.tactics[1]:find("role3").value
 assert_equal(role3.required_count, 3)
 assert_equal(role3.weight, 1)
 
-t:choose(wesnoth.units.get("unit1"))
-assert(wesnoth.units.get("unit1").role == "role3")
+tactics.tactics[1]:choose(wesnoth.units.get("unit1"))
+assert_equal(wesnoth.units.get("unit1").role, "role3")
 
-random = tactics.random(tactics.base(2))
-random:choose(wesnoth.units.get("unit2"))
+tactics.tactics[2]:choose(wesnoth.units.get("unit2"))
 assert_equal(wesnoth.units.get("unit2").role, "role1")

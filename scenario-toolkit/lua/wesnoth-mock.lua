@@ -14,11 +14,21 @@ end
 units.get = get_unit
 units.create = create_unit
 
-local function create(side)
-  sides[side] = { variables = {} }
+local function create_side(side)
+  sides[side] = { side = side, variables = {} }
 end
 
-sides.create = create
+-- WARNING: the filter is being ignored for the moment
+local function iter_sides(filter) 
+  local idx = 0
+  return function()
+    idx = idx + 1
+    return sides[idx]
+  end
+end
+
+sides.create = create_side
+sides.iter = iter_sides
 
 local function array_get(key, tbl)
   local res = tbl

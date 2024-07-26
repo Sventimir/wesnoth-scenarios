@@ -60,14 +60,16 @@ local function random(strategy)
 end
 
 local function most_fitting(chooser, strategy)
+  strategy.chooser = chooser
+
   function strategy:choose(unit)
     local all = self:all()
     local best = all[1]
     for _, tactic in ipairs(all) do
-      best = chooser.better(best, tactic)
+      best = self.chooser.better(best, tactic)
     end
     self:set_role(best.role, unit)
-    chooser.adjust_chosen(best)
+    self.chooser.adjust_chosen(best)
   end
 
   function strategy:unit_lost(unit)
@@ -76,7 +78,7 @@ local function most_fitting(chooser, strategy)
       return
     end
     local tactic = self:find(role)
-    chooser.adjust_lost(tactic)
+    self.chooser.adjust_lost(tactic)
   end
   
   return strategy
@@ -94,13 +96,23 @@ local count_chooser = {
   end
 }
 
-
-return {
+local mod = {
   base = base,
   random = random,
   most_required = function(strategy) return most_fitting(count_chooser, strategy) end,
   most_fitting = most_fitting,
   choosers = {
     count = count_chooser
+  },
+  tactics = {}
 }
-}
+
+
+for side in wesnoth.sides.iter({ formula = "not (is_human or is_network or is_ai)" }) do
+  if side.variables.tactics then
+    local typ = side.variables.tactics.type
+    mod.tactics[side.side] = mod[typ](mod.base(side.side))
+  end
+end
+
+return mod
