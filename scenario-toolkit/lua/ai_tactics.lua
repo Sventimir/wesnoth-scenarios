@@ -1,5 +1,5 @@
-local function make(side)
-  local obj = { side = side, total_weight = 0 }
+local function base(side)
+  local obj = { side = side }
 
   function obj:all()
     return wml.array_access.get("tactics.tactic", wesnoth.sides[self.side].variables)
@@ -13,16 +13,6 @@ local function make(side)
     end
   end
 
-  function obj:adjust_count(role, value)
-    local tactic = self:find(role)
-    if tactic == nil then
-      return
-    end
-    -- sadly, with different access methods, arrays are indexed differently :/
-    local v = string.format("tactics.tactic[%d].count", tactic.index - 1)
-    wesnoth.sides[self.side].variables[v] = tactic.value.count + value
-  end
-
   function obj:set_role(role, unit)
     if role == nil then
       return
@@ -33,39 +23,84 @@ local function make(side)
     })
   end
 
-  function obj:choose_random(unit)
-    local idx = mathx.random(1, self.total_weight)
-    for _, tactic in ipairs(self:all()) do
-      if idx <= tactic.weight then
-        self:set_role(tactic.role, unit)
-        self:adjust_count(tactic.role, -1)
-        return
-      else
-        idx = idx - tactic.weight
-      end        
-    end
+  function obj:choose(unit)
+    -- do nothing; no role is assigned
   end
 
-  function obj:choose_most_required(unit)
-    local most_needed = { role = nil, count = 0 }
-    for _, tactic in ipairs(self:all()) do
-      if tactic.count > most_needed.count then
-        most_needed = tactic
-      end
-    end
-    if most_needed.role == nil then
-      self:choose_random(unit)
-    else
-      self:set_role(most_needed.role, unit)
-      self:adjust_count(most_needed.role, -1)
-    end
-  end
-  
-  for _, tactic in ipairs(obj:all()) do
-    obj.total_weight = obj.total_weight + tactic.weight
+  function obj:unit_lost(unit)
+    -- do nothing
   end
 
   return obj
 end
 
-return { make = make }
+local function random(strategy)
+  strategy.total_weight = 0
+
+  function strategy:choose_random(unit)
+    local idx = mathx.random(1, self.total_weight)
+    for _, tactic in ipairs(self:all()) do
+      local weight = tactic.weight or 1
+      if idx <= weight then
+        self:set_role(tactic.role, unit)
+        return
+      else
+        idx = idx - weight
+      end        
+    end
+  end
+
+  strategy.choose = strategy.choose_random
+
+  for _, tactic in ipairs(strategy:all()) do
+    strategy.total_weight = strategy.total_weight + (tactic.weight or 1)
+  end
+
+  return strategy
+end
+
+local function most_fitting(chooser, strategy)
+  function strategy:choose(unit)
+    local all = self:all()
+    local best = all[1]
+    for _, tactic in ipairs(all) do
+      best = chooser.better(best, tactic)
+    end
+    self:set_role(best.role, unit)
+    chooser.adjust_chosen(best)
+  end
+
+  function strategy:unit_lost(unit)
+    local role = wesnoth.units.get(unit.id).role
+    if role == nil then
+      return
+    end
+    local tactic = self:find(role)
+    chooser.adjust_lost(tactic)
+  end
+  
+  return strategy
+end
+
+local count_chooser = {
+  better = function(a, b)
+    return a.required_count < b.required_count and b or a
+  end,
+  adjust_chosen = function(tactic)
+    tactic.required_count = tactic.required_count - 1
+  end,
+  adjust_lost = function(tactic)
+    tactic.required_count = tactic.required_count + 1
+  end
+}
+
+
+return {
+  base = base,
+  random = random,
+  most_required = function(strategy) return most_fitting(count_chooser, strategy) end,
+  most_fitting = most_fitting,
+  choosers = {
+    count = count_chooser
+}
+}

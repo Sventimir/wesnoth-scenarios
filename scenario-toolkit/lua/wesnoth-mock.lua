@@ -33,7 +33,7 @@ local function role(args)
   u.role = args.role
 end
 
-
+local random_gen = map(function(n) return n - 1 end, int.nats())
 
 wesnoth = {
   sides = sides,
@@ -47,3 +47,12 @@ wml = {
   }
 }
 
+mathx = {
+  -- since this is just a mock, we want randomness to be predictable.
+  random = function(lower, upper)
+    return random_gen() %  (upper - lower) + lower
+  end,
+  choose_random = function(tbl)
+    return tbl[mathx._random_gen() % #tbl]
+  end
+}
