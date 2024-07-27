@@ -1,3 +1,5 @@
+wesnoth.require("~add-ons/above-and-below/lua/core.lua")
+
 function aab_run_dialog(speakers, messages, first_speaker, next_speaker)
   local next_speaker = next_speaker or function(current_speaker)
     if current_speaker < #speakers then

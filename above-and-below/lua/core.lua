@@ -1,3 +1,7 @@
+if not pcall(function() return require end) then
+  require = wesnoth.require
+end
+
 function as_table(iter)
   local t = {}
   for item in iter do
@@ -52,5 +56,5 @@ function display_table(t)
   end
 end
 
-int = wesnoth.require("int")
-str = wesnoth.require("str")
+int = require("int")
+str = require("str")

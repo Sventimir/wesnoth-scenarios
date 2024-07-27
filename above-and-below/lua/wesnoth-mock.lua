@@ -46,6 +46,7 @@ end
 local random_gen = map(function(n) return n - 1 end, int.nats())
 
 wesnoth = {
+  require = require,
   sides = sides,
   units = units,
   wml_actions = { role = role }

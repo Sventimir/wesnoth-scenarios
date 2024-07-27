@@ -1,4 +1,4 @@
-wesnoth.require("~add-ons/above-and-below/lua/core.lua")
+require("core")
 
 local function base(side)
   local obj = { side = side }
