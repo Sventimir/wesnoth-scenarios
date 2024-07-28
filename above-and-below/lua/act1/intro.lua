@@ -21,8 +21,10 @@ local messages = {
 local leaders = wesnoth.units.find_on_map({ side = player_sides, canrecruit = true })
 mathx.shuffle(leaders)
 
-aab_run_dialog(
-  leaders,
-  messages,
-  mathx.random(1, players_count)
-)
+local d = dialogue.make()
+
+for i, m in ipairs(messages) do
+  d:add(dialogue.line(leaders[i % #leaders + 1], m))
+end
+
+d:play()

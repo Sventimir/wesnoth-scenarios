@@ -50,6 +50,20 @@ function fold(f, acc, iter)
   return res
 end
 
+function zip(iter1, iter2)
+  local i = 0
+  return function() 
+    i = i + 1
+    return iter1(), iter2()
+  end
+end
+
+function get(key)
+  return function(tbl)
+    return tbl[key]
+  end
+end
+
 function display_table(t)
   for k, v in pairs(t) do
     print(string.format("%s = %s", k, v))
