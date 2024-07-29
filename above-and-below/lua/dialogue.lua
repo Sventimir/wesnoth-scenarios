@@ -4,6 +4,7 @@ function line(speaker, message)
   local l = { speaker = speaker, message = message }
 
   function l:play()
+    display_table(self)
     gui.show_narration({
       portrait = self.speaker.portrait,
       title = self.speaker.name,

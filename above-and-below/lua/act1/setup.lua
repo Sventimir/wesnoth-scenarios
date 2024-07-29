@@ -44,3 +44,5 @@ end
 ai_tactics = wesnoth.require("~add-ons/above-and-below/lua/ai_tactics.lua")
 
 dialogue = wesnoth.require("~add-ons/above-and-below/lua/dialogue.lua")
+
+unit_set = wesnoth.require("~add-ons/above-and-below/lua/unit_set.lua")

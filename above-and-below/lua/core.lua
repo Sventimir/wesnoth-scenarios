@@ -10,6 +10,14 @@ function as_table(iter)
   return t
 end
 
+function iter(tbl)
+  local i = 0
+  return function()
+    i = i + 1
+    return tbl[i]
+  end
+end
+
 function take(n, iter)
   local i = 0
   return function()
@@ -50,6 +58,16 @@ function fold(f, acc, iter)
   return res
 end
 
+function filter(predicate, iter)
+  return function()
+    local item = iter()
+    while item ~= nil and not predicate(item) do
+      item = iter()
+    end
+    return item
+  end
+end
+
 function zip(iter1, iter2)
   local i = 0
   return function() 
@@ -65,6 +83,7 @@ function get(key)
 end
 
 function display_table(t)
+  print("table:")
   for k, v in pairs(t) do
     print(string.format("%s = %s", k, v))
   end
