@@ -4,7 +4,6 @@ function line(speaker, message)
   local l = { speaker = speaker, message = message }
 
   function l:play()
-    display_table(self)
     gui.show_narration({
       portrait = self.speaker.portrait,
       title = self.speaker.name,
@@ -18,7 +17,7 @@ end
 function choice(speaker, options, var)
   local c = {
     speaker = speaker or {},
-    viewers = viewers,
+    viewers = {},
     options = options,
     var = var or "dialog_choice"
   }
@@ -44,13 +43,13 @@ function choice(speaker, options, var)
                                 value = value
       }})
     end
-    wesnoth.wml_actions.dialog(dialog)
+    wesnoth.wml_actions.message(dialog)
 
     for _, side in ipairs(self.viewers) do
       gui.show_narration({
         portrait = self.speaker.portrait,
         title = self.speaker.name,
-        message = self.message
+        message = self.options[wml.variables[self.var]]
       })
     end
 
@@ -80,8 +79,19 @@ function make(...)
   return d
 end
 
+function exchange(speakers, messages)
+  local d = make()
+
+  for i, message in ipairs(messages) do
+    d:add(line(speakers[(i % #speakers) + 1], messages[i]))
+  end
+
+  return d
+end
+
 return {
   line = line,
   choice = choice,
-  make = make
+  make = make,
+  exchange = exchange
 }

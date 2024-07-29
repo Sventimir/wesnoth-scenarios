@@ -22,7 +22,9 @@ for side in wesnoth.sides.iter({ side = player_sides }) do
   side:remove_fog(locations)
 end
 
-local messages = {
+local d = dialogue.exchange(
+  {negotiator, dwarf_lord},
+  {
     "A cóż to za przybysze starają się wkroczyć na nasz ziemie? Ani kroku dalej!",
     "Spokojnie, nie mamy złych zamiarów. Przybyliśmy tu w pokoju.",
     "Wasze zamiary niewiele mnie interesują, mówiąc oględnie. Na tym szlaku pobieramy myto. Płacisz - przechodzisz. Nie płacisz - zawracasz. Proste.",
@@ -30,9 +32,8 @@ local messages = {
     string.format("%d sztuk złota od łebka.", wml.variables.toll_per_unit),
     string.format("%d sztuk złota od łebka? Widzisz ilu nas jest?", wml.variables.toll_per_unit),
     "Możecie spróbować przejść bez płacenia. Po tej operacji z pewnością będzie was mniej. Kto wie może nawet będzie was stać na myto? Chociaż mówiąc szczerze nie wyglądacie na szczególnie majętnych. Tak czy inaczej, opłata nie podlega negocjacjom.", 
-}
-local speakers = {dwarf_lord, negotiator}
-aab_run_dialog(speakers, messages)
+  }
+)
 
 local units = wesnoth.units.find_on_map({ side = player_sides })
 local toll = #units * wml.variables.toll_per_unit
@@ -42,40 +43,24 @@ for side in wesnoth.sides.iter({ side = player_sides }) do
   total_funds = total_funds + side.gold
 end
 
-local choice = {
-  speaker = negotiator.id,
-  side_for = negotiator.side,
-  variable = "pay_the_toll",
-  wait_description = string.format("%s rozważa propozycję krasnoluda.", negotiator.name)
-}
-
-local answers = {}
-if total_funds >= toll then
-  answers[true] = string.format("Zgoda, zapłacimy. To będzie %d sztuk złota.", toll)
-  answers[false] = "Po moim trupie. Albo po twoim za chwilę przejdziemy. Do broni towarzysze!"
-else
-  answers[false] = string.format("Niestety, nie mamy %d sztuk złota. A przejść musimy, więc sam rozumiesz. Gotuj się na śmierć.", toll)
-end
-
-for val, msg in pairs(answers) do
-  table.insert(choice, {"option", {
-    message = msg,
-    value = val
-  }})
-end
-
-wesnoth.wml_actions.message(choice)
-local others = wesnoth.sides.find({
+local choice = dialogue.choice(negotiator, {}, "pay_the_toll")
+local other_players_filter = {
     side = player_sides,
-    { "not", { side = negotiating_side } }
-})
-for _, side in ipairs(others) do
-  wesnoth.wml_actions.message({
-      speaker = negotiator.id,
-      side_for = side.side,
-      message = answers[wml.variables_proxy.pay_the_toll]
-  })
+    { "not", { side = negotiator.side } }
+}
+choice.wait_description = string.format("%s rozważa propozycję krasnoluda.", negotiator.name)
+for side in wesnoth.sides.iter(other_players_filter) do
+  choice:add_viewer(side.side)
 end
+if total_funds >= toll then
+  choice:add_option(true, string.format("Zgoda, zapłacimy. To będzie %d sztuk złota.", toll))
+  choice:add_option(false, "Po moim trupie. Albo po twoim za chwilę przejdziemy. Do broni towarzysze!")
+else
+  choice:add_option(false, string.format("Niestety, nie mamy %d sztuk złota. A przejść musimy, więc sam rozumiesz. Gotuj się na śmierć.", toll))
+end
+d:add(choice)
+
+d:play()
 
 if wml.variables_proxy.pay_the_toll then
   gui.show_narration({
@@ -99,24 +84,27 @@ if wml.variables_proxy.pay_the_toll then
   end
 
   wesnoth.wml_actions.micro_ai({
-      side = necromancers,
+      side = necromancers[1],
       ca_id = "bat_north_hunter",
       ai_type = "zone_guardian",
       action = "delete"
   })
   wesnoth.wml_actions.micro_ai({
-      side = necromancers,
-      ca_id = "zone_guardian",
-      ai_type = "bottleneck_defense",
+      side = necromancers[2],
+      ca_id = "bat_south_hunter",
+      ai_type = "zone_guardian",
       action = "delete"
   })
 else
-  messages = {
-    "Tylko spróbujcie, a dowiecie się, jakie to nieprzyjemne uczucie nosić gips.",
-    "Musiałeś sporo obrywać, skoro tyle o tym wiesz.",
-    "Ohoho, nie chłopcze, nie sprowokujesz mnie tak łatwo. Trzymać pozycje chłopcy. Nadchodzą!"
-  }
-  aab_run_dialog(speakers, messages)
+  d = dialogue.exchange(
+    {dwarf_lord, negotiator},
+    {
+      "Tylko spróbujcie, a dowiecie się, jakie to nieprzyjemne uczucie nosić gips.",
+      "Musiałeś sporo obrywać, skoro tyle o tym wiesz.",
+      "Ohoho, nie chłopcze, nie sprowokujesz mnie tak łatwo. Trzymać pozycje chłopcy. Nadchodzą!"
+    }
+  )
+  d:play()
 end
 
 -- Back to the castle
