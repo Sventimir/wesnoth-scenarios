@@ -76,7 +76,7 @@ local function most_fitting(chooser, strategy)
 
   function strategy:unit_lost(unit)
     local role = wesnoth.units.get(unit.id).role
-    if role == nil then
+    if role == '' then
       return
     end
     local tactic = self:find(role)
