@@ -18,6 +18,7 @@ end
 -- Spawn wolves in the woods.
 local forest_hexes = wesnoth.map.find({
     terrain = "*^Fp",
+    { "not", { area = "dwarven-land" } },
     { "not", { x = 61 } }, -- beyond the map's edge
     { "not", { y = 41 } },
 })
@@ -29,7 +30,7 @@ local wolf_count = {
   HARD = 50
 }
 
-for i = 1, 20 do
+for i = 1, wolf_count[wesnoth.scenario.difficulty] do
   local u = wesnoth.units.create({
       type = "Sneaky_Wolf",
       side = monsters,
