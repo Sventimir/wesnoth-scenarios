@@ -15,8 +15,6 @@ if not current_leader.id then
   current_leader = table.remove(leaders, 1)
 end
 
-display_table(messages)
-
 local d = dialogue.make()
 d:add(dialogue.line(current_leader, messages[1]))
 

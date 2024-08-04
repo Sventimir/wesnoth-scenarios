@@ -17,10 +17,9 @@ end
 
 -- Spawn wolves in the woods.
 local forest_hexes = wesnoth.map.find({
+    include_borders = false,
     terrain = "*^Fp",
     { "not", { area = "dwarven-land" } },
-    { "not", { x = 61 } }, -- beyond the map's edge
-    { "not", { y = 41 } },
 })
 mathx.shuffle(forest_hexes)
 

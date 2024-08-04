@@ -69,10 +69,24 @@ function filter(predicate, iter)
 end
 
 function zip(iter1, iter2)
-  local i = 0
   return function() 
-    i = i + 1
-    return iter1(), iter2()
+    local x = iter1()
+    local y = iter2()
+    if x and y then
+      return x, y
+    end
+  end
+end
+
+function cycle(tbl)
+  local i = 0
+  return function()
+    if i < #tbl then
+      i = i + 1
+    else
+      i = 1
+    end
+    return tbl[i]
   end
 end
 
