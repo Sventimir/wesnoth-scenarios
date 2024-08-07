@@ -82,8 +82,8 @@ end
 function exchange(speakers, messages)
   local d = make()
 
-  for i, message in ipairs(messages) do
-    d:add(line(speakers[(i % #speakers) + 1], messages[i]))
+  for speaker, message in zip(cycle(speakers), iter(messages)) do
+    d:add(line(speaker, message))
   end
 
   return d

@@ -68,6 +68,20 @@ function filter(predicate, iter)
   end
 end
 
+function filter_map(f, iter)
+  return function()
+    local item = iter()
+    while item ~= nil do
+      local res = f(item)
+      if res ~= nil then
+        return res
+      else
+        item = iter()
+      end
+    end
+  end
+end
+
 function zip(iter1, iter2)
   return function() 
     local x = iter1()
@@ -88,6 +102,37 @@ function cycle(tbl)
     end
     return tbl[i]
   end
+end
+
+function chain(...)
+  local iters = {...}
+  local i = 1
+  return function()
+    local item = iters[i]()
+    while item == nil and i < #iters do
+      i = i + 1
+      item = iters[i]()
+    end
+    return item
+  end
+end
+
+-- Returns the first item (if any) in the iterator that satisfies the predicate.
+function any(iterator, f)
+  for item in iterator do
+    if f == nil or f(item) then
+      return item
+    end
+  end
+end
+
+function all(f, iterator)
+  for item in iterator do
+    if not f(item) then
+      return false
+    end
+  end
+  return true
 end
 
 function get(key)

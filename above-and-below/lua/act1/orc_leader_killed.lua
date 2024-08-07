@@ -1,6 +1,6 @@
 local d = dialogue.make()
 local killer = wesnoth.units.get(wml.variables_proxy.second_unit.id)
-local leaders = wesnoth.units.find_on_map({ side = player_sides, canrecruit = true })
+local leaders = players.heroes()
 mathx.shuffle(leaders)
 
 local treasure = {
