@@ -55,13 +55,22 @@ local mage_sides = filter_map(
   function(u) if is_mage(u) then return u.side end end,
   iter(leaders)
 )
-mage_sides = table.concat(as_table(mage_sides), ",")
+
+-- WML variables don't distinguish types. If a string can be parsed as a number, it
+-- is immediately converted and fails to compare equal to the same string passed in
+-- again. This is a crude workaround this issue. 
+mage_sides = as_table(mage_sides)
+if #mage_sides > 1 then
+  mage_sides = table.concat(mage_sides, ",") -- a string
+else
+  mage_sides = mage_sides[1] -- a number, as Wesnoth would convert a string anyway
+end
 
 local response = dialogue.choice(
   negotiator, 
   {
     [mage_sides] = "Walczyłeś o przetrwanie nekromanty, a teraz będziesz walczył o moje. Proste.",
-    [""] = "Koniec żartów. Nikt przyzwoity nie zajmuje się nekromancją. Giń!",
+    [0] = "Koniec żartów. Nikt przyzwoity nie zajmuje się nekromancją. Giń!",
   },
   "can_recruit_dark_adepts"
 )
@@ -73,7 +82,7 @@ end
 d:add(response)
 d:play()
 
-if wml.variables_proxy.can_recruit_dark_adepts then
+if wml.variables_proxy.can_recruit_dark_adepts ~= 0 then
   wesnoth.wml_actions.modify_unit({
       { "filter", { id = apprentice.id } },
       side = negotiator.side,
