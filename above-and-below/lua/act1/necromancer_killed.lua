@@ -1,3 +1,29 @@
+-- Note: after this event has fired, the following function remains
+-- defined and can be invoked again for another unit that picks up the
+-- necklace dropped if the apprentice is killed.
+function give_vampiric_necklace(unit)
+  wesnoth.wml_actions.modify_unit({
+      { "filter", { id = unit.id } },
+      { "modifications", {
+          { "object", {
+              duration = "forever",
+              { "effect", {
+                  apply_to = "attack",
+                  range = "ranged",
+                  { "set_specials", {
+                      mode = "append",
+                      { "drains", {
+                          id = "drains",
+                          name = "drains",
+                      }}
+                  }}
+              }}
+          }}
+      }}
+  })
+end
+
+
 local locs = locations.empty_hexes_near(7, 5)
 local loc = locs[mathx.random(#locs)]
 local apprentice = wesnoth.units.create({
@@ -7,6 +33,7 @@ local apprentice = wesnoth.units.create({
     x = loc.x,
     y = loc.y,
 })
+give_vampiric_necklace(apprentice)
 wesnoth.units.to_map(apprentice)
 
 function is_mage(u)
