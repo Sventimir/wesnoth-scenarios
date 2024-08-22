@@ -83,18 +83,10 @@ if wml.variables_proxy.pay_the_toll then
     })
   end
 
-  wesnoth.wml_actions.micro_ai({
-      side = necromancers[1],
-      ca_id = "bat_north_hunter",
-      ai_type = "zone_guardian",
-      action = "delete"
-  })
-  wesnoth.wml_actions.micro_ai({
-      side = necromancers[2],
-      ca_id = "bat_south_hunter",
-      ai_type = "zone_guardian",
-      action = "delete"
-  })
+  local goblins_and_bats = wesnoth.units.find_on_map({ type = "Goblin Spearman,Vampire Bat"})
+  for unit in iter(goblins_and_bats) do
+    unit.role = "exit-guard"
+  end
 else
   d = dialogue.exchange(
     {dwarf_lord, negotiator},
