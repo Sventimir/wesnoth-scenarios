@@ -138,3 +138,8 @@ else
 end
 
 response:clear_var()
+
+local goblins = wesnoth.units.find_on_map({ side = orc, canrecruit = false })
+for goblin in iter(goblins) do
+  goblin.role = "exit-guard"
+end

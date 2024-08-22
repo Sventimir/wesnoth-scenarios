@@ -42,6 +42,6 @@ for side in wesnoth.sides.iter({ side = player_sides }) do
 end
 
 local bats = wesnoth.units.find_on_map({ side = necromancer, canrecruit = false })
-for bats in iter(bats) do
-  bats.role = "exit_guard"
+for bat in iter(bats) do
+  bat.role = "exit-guard"
 end
