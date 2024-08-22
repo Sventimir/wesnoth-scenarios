@@ -1,28 +1,26 @@
--- Note: after this event has fired, the following function remains
--- defined and can be invoked again for another unit that picks up the
+-- Note: after this event has fired, the following magic item remains
+-- defined and can be granted again to another unit that picks up the
 -- necklace dropped if the apprentice is killed.
-function give_vampiric_necklace(unit)
-  wesnoth.wml_actions.modify_unit({
-      { "filter", { id = unit.id } },
-      { "modifications", {
-          { "object", {
-              duration = "forever",
-              { "effect", {
-                  apply_to = "attack",
-                  range = "ranged",
-                  { "set_specials", {
-                      mode = "append",
-                      { "drains", {
-                          id = "drains",
-                          name = "drains",
-                      }}
-                  }}
-              }}
-          }}
-      }}
-  })
-end
-
+vampiric_necklace = magic.item({
+    id = "vampiric-necklace",
+    name = "Wampiryczny Naszyjnik",
+    image = "items/ankh-necklace.png",
+    description = "Ten artefakt daje noszącemu magowi zdolność wyssania życia.",
+    cannot_use_message = "Tylko magowie mogą korzystać z mocy tego naszyjnika.",
+    effects = {
+      {
+        apply_to = "attack",
+        range = "ranged",
+        { "set_specials", {
+            mode = "append",
+            { "drains", {
+                id = "drains",
+                name = "drains",
+            }}
+        }}
+      }
+    }
+})
 
 local locs = locations.empty_hexes_near(7, 5)
 local loc = locs[mathx.random(#locs)]
@@ -33,8 +31,8 @@ local apprentice = wesnoth.units.create({
     x = loc.x,
     y = loc.y,
 })
-give_vampiric_necklace(apprentice)
 wesnoth.units.to_map(apprentice)
+vampiric_necklace:grant({ id = apprentice.id }, { silent = true })
 
 function is_mage(u)
   local side = wesnoth.sides[u.side]
