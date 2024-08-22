@@ -23,7 +23,7 @@ for side in wesnoth.sides.iter({ side = player_sides }) do
 end
 
 local d = dialogue.exchange(
-  {negotiator, dwarf_lord},
+  {dwarf_lord, negotiator},
   {
     "A cóż to za przybysze starają się wkroczyć na nasz ziemie? Ani kroku dalej!",
     "Spokojnie, nie mamy złych zamiarów. Przybyliśmy tu w pokoju.",
