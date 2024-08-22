@@ -1,4 +1,11 @@
 -- Define various magical abilities and items
+function is_magical(attack)
+  return any(
+    iter(attack.specials),
+    function(special) return special[2].id == "magical" end
+  )
+end
+
 function item(props)
   local this = props
 
@@ -19,10 +26,50 @@ function item(props)
     return wml
   end
 
+  function this:place_on_map(x, y, options)
+    local event_id = self.id .. "pickup"
+    self.location = { x = x, y = y }
+    wesnoth.wml_actions.item({
+        name = self.id,
+        x = x,
+        y = y,
+        image = self.image,
+    })
+    wesnoth.game_events.add({
+        id = event_id,
+        name = "moveto",
+        first_time_only = false,
+        filter = {{ "filter", self.location }},
+        action = function()
+          local unit = wesnoth.units.find_on_map(self.location)[1]
+          local ranged_attack = any(
+            iter(unit.attacks),
+            function(attack) return attack.range == "ranged" and is_magical(attack) end
+          )
+          if ranged_attack then
+            self:grant({ id = unit.id }, options)
+            self:remove_from_map()
+            wesnoth.game_events.remove(event_id)
+          else
+            gui.show_narration({ message = self.cannot_use_message }) 
+          end
+        end
+    })
+  end
+
+  function this:drop_from(unit, options)
+    this:place_on_map(unit.x, unit.y, options)
+  end
+
   function this:grant(filter, options)
     local wml = self:to_wml(options or {})
     table.insert(wml, { "filter", filter })
     wesnoth.wml_actions.object(wml)
+  end
+
+  function this:remove_from_map()
+    wesnoth.wml_actions.remove_item(self.location)
+    self.location = nil
   end
  
   return this
@@ -30,5 +77,8 @@ end
 
 
 return {
+  attack = {
+    is_magical = is_magical,
+  },
   item = item
 }
