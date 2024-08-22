@@ -107,15 +107,34 @@ end
 d:add(response)
 d:play()
 
+-- This variable is being set by the player's dialogue choice.  If the
+-- player chooses to kill the apprentice, its value is 0.  Otherwise
+-- it's a string containing side numbers of players entitled to recruit
+-- dark adepts, separated by commas. This is passed directly to the
+-- allow_recruit action.
 if wml.variables_proxy.can_recruit_dark_adepts ~= 0 then
   wesnoth.wml_actions.modify_unit({
       { "filter", { id = apprentice.id } },
       side = negotiator.side,
+  })
+  wesnoth.wml_actions.allow_recruit({
+      side = wml.variables_proxy.can_recruit_dark_adepts,
+      type = apprentice.type,
   })
   gui.show_narration({
       portrait=apprentice.portrait,
       title=apprentice.name,
       message="Jest nas więcej, panie. Chętnie zaciągniemy się pod wasze sztandary."
   })
+else
+  wesnoth.game_events.add({
+      id = "dark-apprentice-killed",
+      name = "last_breath",
+      filter = {{ "filter", { id = apprentice.id } }},
+      action = function()
+        vampiric_necklace:drop_from(apprentice)
+      end
+  })
 end
--- Other consequences of the choice are applied by scenario WML.
+
+response:clear_var()
