@@ -4,15 +4,21 @@ local function base(side)
   local obj = { side = side }
 
   function obj:all()
-    return wml.array_access.get("tactics.tactic", wesnoth.sides[self.side].variables)
-  end
-
-  function obj:find(role)
-    for i, tactic in ipairs(self:all()) do
-      if tactic.role == role then
-        return { index = i, value = tactic }
+    local ret = wml.array_access.get("tactics.tactic", wesnoth.sides[self.side].variables)
+    
+    function ret:find(role)
+      for i, tactic in ipairs(self) do
+        if tactic.role == role then
+          return { index = i, value = tactic }
+        end
       end
     end
+
+    function ret:update()
+      wml.array_access.set("tactics.tactic", self, wesnoth.sides[side].variables)
+    end
+
+    return ret
   end
 
   function obj:set_role(role, unit)
@@ -72,6 +78,7 @@ local function most_fitting(chooser, strategy)
     end
     self:set_role(best.role, unit)
     self.chooser.adjust_chosen(best)
+    all:update()
   end
 
   function strategy:unit_lost(unit)
@@ -79,8 +86,10 @@ local function most_fitting(chooser, strategy)
     if role == '' then
       return
     end
-    local tactic = self:find(role)
-    self.chooser.adjust_lost(tactic)
+    local all = self:all()
+    local tactic = all:find(role)
+    self.chooser.adjust_lost(tactic.value)
+    all:update()
   end
   
   return strategy
