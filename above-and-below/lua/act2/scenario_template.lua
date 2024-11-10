@@ -1,4 +1,5 @@
 local scenario = {
+  id = "ab-act2",
   name = "Labirynth",
   carryover_percentage = 50,
   carryover_add = true,
