@@ -57,10 +57,10 @@ local function node(labirynth, x, y)
     return labirynth:get(dir.translate(self.x, self.y))
   end
   
-  function node:path_to(dir)
+  function node:path_to(dir, terrain)
     local target = self:neighbour(dir)
     target.open_from = nil
-    target.terrain = "Uu"
+    target.terrain = terrain
     if target.x == 1 or target.x == labirynth.width or target.y == 1 or target.y == labirynth.height then
       table.insert(labirynth.exits, target)
     end

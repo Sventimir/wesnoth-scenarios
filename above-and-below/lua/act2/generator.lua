@@ -5,12 +5,13 @@ local player_colors = { "red", "blue", "green" }
 
 function labirynth(cfg)
   local labirynth = {
+    gen_turn = 0,
+    gen_path = {},
     exits = {},
     starting_locations = {},
     width = cfg.width,
     height = cfg.height
   }
-  local current_path = {}
 
   for y = 1, cfg.height do
     local row = {}
@@ -53,30 +54,48 @@ function labirynth(cfg)
     return map
   end
 
-  labirynth.boss_start = labirynth:get(mathx.random(1, cfg.width), mathx.random(1, cfg.height))
-  table.insert(current_path, 1, labirynth.boss_start)
-  current_path[1].open_from = nil
-  current_path[1].terrain = "Uu"
-  -- local turn = 0
-  -- current_path[1].label = turn
-  while current_path[1] do
+  function labirynth:init(start)
+    table.insert(self.gen_path, 1, start)
+    self.gen_path[1].open_from = nil
+    self.gen_path[1].terrain = "Ker"
+    self.gen_path[1].label = labirynth.gen_turn
+
+    self:gen_step(directions.n, "Cer")
+    self:gen_step(directions.se, "Cer")
+    self:gen_step(directions.s, "Cer")
+    self:gen_step(directions.sw, "Cer")
+    self:gen_step(directions.nw, "Cer")
+    self:gen_step(directions.n, "Cer")
+  end
+
+  function labirynth:gen_step(dir, terrain)
+    local target = self.gen_path[1]:path_to(dir, terrain)
+    labirynth.gen_turn = self.gen_turn + 1
+    target.label = self.gen_turn
+    table.insert(self.gen_path, 1, target)
+  end
+
+  function labirynth:gen_backstep()
+    table.remove(self.gen_path, 1)
+  end
+
+  labirynth.boss_start = labirynth:get(mathx.random(2, cfg.width - 1), mathx.random(2, cfg.height - 1))
+  labirynth:init(labirynth.boss_start)
+
+  while labirynth.gen_path[1] do
     local neighbours = {}
     for _, dir in pairs(directions) do
-      local neighbour = current_path[1]:neighbour(dir)
+      local neighbour = labirynth.gen_path[1]:neighbour(dir)
       if neighbour then
       end
-      if hex.path_open(current_path[1], neighbour) then
+      if hex.path_open(labirynth.gen_path[1], neighbour) then
         table.insert(neighbours, dir)
       end
     end
     if #neighbours > 0 then
-      local dir = neighbours[mathx.random(1, #neighbours)]
-      local target = current_path[1]:path_to(dir)
-      -- turn = turn + 1
-      -- target.label = turn
-      table.insert(current_path, 1, target)
+      labirynth:gen_step(neighbours[mathx.random(1, #neighbours)], "Uu")
     else
-      table.remove(current_path, 1)
+      labirynth:gen_backstep()
     end
   end
 
