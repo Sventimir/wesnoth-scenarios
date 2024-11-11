@@ -46,7 +46,11 @@ end
 local random_gen = map(function(n) return n - 1 end, int.nats())
 
 wesnoth = {
-  require = require,
+  require = function(path)
+    local filename, _ = string.gsub(path, "~add%-ons/above%-and%-below/lua/", "")
+    local modname, _ = string.gsub(filename, "%.lua", "")
+    return require(modname)
+  end,
   sides = sides,
   units = units,
   wml_actions = { role = role }
@@ -61,7 +65,11 @@ wml = {
 mathx = {
   -- since this is just a mock, we want randomness to be predictable.
   random = function(lower, upper)
-    return random_gen() %  (upper - lower) + lower
+    if upper == lower then
+      return lower
+    else
+      return random_gen() %  (upper - lower) + lower
+    end
   end,
   choose_random = function(tbl)
     return tbl[mathx._random_gen() % #tbl]
