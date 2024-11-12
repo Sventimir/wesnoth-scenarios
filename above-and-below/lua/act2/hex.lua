@@ -1,32 +1,55 @@
-local function north(x, y)
-  return x, y - 1
-end
-local function northeast(x, y)
-  return x + 1, y - (x % 2)
-end
-local function southeast(x, y)
-  return x + 1, y - (x % 2) + 1
-end
-local function south(x, y)
-  return x, y + 1
-end
-local function southwest(x, y)
-  return x - 1, y - (x % 2) + 1
-end
-local function northwest(x, y)
-  return x - 1, y - (x % 2)
+local translations = {
+  [0] = function(x, y) return x, y - 1 end, --north
+  [1] = function(x, y) return x + 1, y - (x % 2) end, --northeast
+  [2] = function(x, y) return x + 1, y - (x % 2) + 1 end, --southeast
+  [3] = function(x, y) return x, y + 1 end, --south
+  [4] = function(x, y) return x - 1, y - (x % 2) + 1 end, --southwest
+  [5] = function(x, y) return x - 1, y - (x % 2) end, --northwest
+}
+
+local function direction(value)
+  local dir = { value = value % 6 }
+
+  function dir:opposite()
+    return direction(self.value + 3)
+  end
+
+  function dir:clockwise()
+    return direction(self.value + 1)
+  end
+
+  function dir:counterclockwise()
+    return direction(self.value + 5)
+  end
+
+  function dir:rotate(times, counterclockwise)
+    if counterclockwise == "random" then
+      counterclockwise = mathx.random(0, 1) == 1
+    end
+    if counterclockwise then
+      return direction(self.value + 5 * times)
+    else
+      return direction(self.value + times)
+    end
+  end
+
+  function dir:translate(x, y)
+    return translations[self.value](x, y)
+  end
+
+  return dir
 end
 
 local directions = {
-  n = { counterclockwise = "nw", clockwise = "ne", opposite = "s", translate = north },
-  ne = { counterclockwise = "n", clockwise = "se", opposite = "sw", translate = northeast },
-  se = { counterclockwise = "ne", clockwise = "s", opposite = "nw", translate = southeast },
-  s = { counterclockwise = "se", clockwise = "sw", opposite = "n", translate = south },
-  sw = { counterclockwise = "s", clockwise = "nw", opposite = "ne", translate = southwest },
-  nw = { counterclockwise = "sw", clockwise = "n", opposite = "se", translate = northwest }
+  n = direction(0),
+  ne = direction(1),
+  se = direction(2),
+  s = direction(3),
+  sw = direction(4),
+  nw = direction(5),
+  random = function() return direction(mathx.random(0, 5)) end,
+  all = function() return map(direction, take(6, int.nats())) end
 }
-
-local dirnames = { "n", "ne", "se", "s", "sw", "nw" }
 
 local function tag_open_from(tag, node)
   if not node then return end
@@ -35,15 +58,6 @@ local function tag_open_from(tag, node)
     node.open_from = tag
   else
     node.open_from = (tag and tag.x == node.open_from.x and tag.y == node.open_from.y and tag) or nil
-  end
-end
-
-local function path_open(src, target)
-  if target and target.open_from then
-    local open_from = target.open_from
-    return open_from == true or (open_from.x == src.x and open_from.y == src.y)
-  else
-    return false
   end
 end
 
@@ -56,9 +70,18 @@ local function node(labirynth, x, y)
   }
   
   function node:neighbour(dir)
-    return labirynth:get(dir.translate(self.x, self.y))
+    return labirynth:get(dir:translate(self.x, self.y))
   end
-  
+
+  function node:path_open_to(target)
+    if target and target.open_from then
+      local open_from = target.open_from
+      return open_from == true or (open_from.x == self.x and open_from.y == self.y)
+    else
+      return false
+    end
+  end
+
   function node:path_to(dir, terrain)
     local target = self:neighbour(dir)
     target.open_from = nil
@@ -66,17 +89,17 @@ local function node(labirynth, x, y)
     if target.x == 1 or target.x == labirynth.width or target.y == 1 or target.y == labirynth.height then
       table.insert(labirynth.exits, target)
     end
-    hex.tag_open_from(nil, self:neighbour(directions[dir.counterclockwise]))
-    local dir_to_mark = dir.clockwise
-    hex.tag_open_from(nil, self:neighbour(directions[dir_to_mark]))
+    tag_open_from(nil, self:neighbour(dir:counterclockwise()))
+    local dir_to_mark = dir:clockwise()
+    tag_open_from(nil, self:neighbour(dir_to_mark))
     for i = 1, 3 do
-      dir_to_mark = directions[dir_to_mark].clockwise
-      hex.tag_open_from(self, self:neighbour(directions[dir_to_mark]))
+      dir_to_mark = dir_to_mark:clockwise()
+      tag_open_from(self, self:neighbour(dir_to_mark))
     end
-    local target_dir = directions[directions[dir.opposite].clockwise]
+    local target_dir = dir:opposite():clockwise()
     for i = 1, 3 do
-      target_dir = directions[target_dir.clockwise]
-      hex.tag_open_from(target, target:neighbour(target_dir))
+      target_dir = target_dir:clockwise()
+      tag_open_from(target, target:neighbour(target_dir))
     end
     return target
     end
@@ -90,14 +113,5 @@ end
 
 return {
   directions = directions,
-  dirnames = dirnames,
-  node = node,
-  north = north,
-  northeast = northeast,
-  southeast = southeast,
-  south = south,
-  southwest = southwest,
-  northwest = northwest,
-  tag_open_from = tag_open_from,
-  path_open = path_open
+  node = node
 }

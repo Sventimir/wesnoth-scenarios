@@ -56,17 +56,16 @@ function labirynth(cfg)
 
   function labirynth:init(start)
     table.insert(self.gen_path, 1, start)
-    print("start:", start.x, start.y)
     self.gen_path[1].open_from = nil
     self.gen_path[1].terrain = "Ker"
     self.gen_path[1].label = labirynth.gen_turn
 
-    local dir = directions[hex.dirnames[mathx.random(1, 6)]]
+    local dir = directions.random()
     self:gen_step(dir, "Cer")
-    dir = directions[directions[dir.clockwise].clockwise]
+    dir = dir:rotate(2)
     for i = 1, 5 do
       self:gen_step(dir, "Cer")
-      dir = directions[dir.clockwise]
+      dir = dir:clockwise()
     end
   end
 
@@ -87,9 +86,9 @@ function labirynth(cfg)
   while labirynth.gen_path[1] do
     local node = labirynth.gen_path[1]
     local neighbours = {}
-    for _, dir in pairs(directions) do
+    for dir in directions.all() do
       local neighbour = node:neighbour(dir)
-      if hex.path_open(node, neighbour) then
+      if node:path_open_to(neighbour) then
         table.insert(neighbours, dir)
       end
     end
