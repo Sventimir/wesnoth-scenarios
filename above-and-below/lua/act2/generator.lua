@@ -1,4 +1,4 @@
-hex = wesnoth.require("~add-ons/above-and-below/lua/act2/hex")
+hex = wesnoth.require("~add-ons/above-and-below/lua/act2/hex.lua")
 directions = hex.directions
 
 local player_colors = { "red", "blue", "green" }
@@ -56,21 +56,23 @@ function labirynth(cfg)
 
   function labirynth:init(start)
     table.insert(self.gen_path, 1, start)
+    print("start:", start.x, start.y)
     self.gen_path[1].open_from = nil
     self.gen_path[1].terrain = "Ker"
     self.gen_path[1].label = labirynth.gen_turn
 
-    self:gen_step(directions.n, "Cer")
-    self:gen_step(directions.se, "Cer")
-    self:gen_step(directions.s, "Cer")
-    self:gen_step(directions.sw, "Cer")
-    self:gen_step(directions.nw, "Cer")
-    self:gen_step(directions.n, "Cer")
+    local dir = directions[hex.dirnames[mathx.random(1, 6)]]
+    self:gen_step(dir, "Cer")
+    dir = directions[directions[dir.clockwise].clockwise]
+    for i = 1, 5 do
+      self:gen_step(dir, "Cer")
+      dir = directions[dir.clockwise]
+    end
   end
 
   function labirynth:gen_step(dir, terrain)
     local target = self.gen_path[1]:path_to(dir, terrain)
-    labirynth.gen_turn = self.gen_turn + 1
+    self.gen_turn = self.gen_turn + 1
     target.label = self.gen_turn
     table.insert(self.gen_path, 1, target)
   end
@@ -83,12 +85,11 @@ function labirynth(cfg)
   labirynth:init(labirynth.boss_start)
 
   while labirynth.gen_path[1] do
+    local node = labirynth.gen_path[1]
     local neighbours = {}
     for _, dir in pairs(directions) do
-      local neighbour = labirynth.gen_path[1]:neighbour(dir)
-      if neighbour then
-      end
-      if hex.path_open(labirynth.gen_path[1], neighbour) then
+      local neighbour = node:neighbour(dir)
+      if hex.path_open(node, neighbour) then
         table.insert(neighbours, dir)
       end
     end

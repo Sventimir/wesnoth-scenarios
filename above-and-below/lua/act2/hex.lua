@@ -26,6 +26,8 @@ local directions = {
   nw = { counterclockwise = "sw", clockwise = "n", opposite = "se", translate = northwest }
 }
 
+local dirnames = { "n", "ne", "se", "s", "sw", "nw" }
+
 local function tag_open_from(tag, node)
   if not node then return end
   if not node.open_from then return end
@@ -88,6 +90,7 @@ end
 
 return {
   directions = directions,
+  dirnames = dirnames,
   node = node,
   north = north,
   northeast = northeast,
