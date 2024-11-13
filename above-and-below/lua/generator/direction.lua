@@ -1,10 +1,10 @@
 local translations = {
-  [0] = function(x, y) return x, y - 1 end, --north
-  [1] = function(x, y) return x + 1, y - (x % 2) end, --northeast
-  [2] = function(x, y) return x + 1, y - (x % 2) + 1 end, --southeast
-  [3] = function(x, y) return x, y + 1 end, --south
-  [4] = function(x, y) return x - 1, y - (x % 2) + 1 end, --southwest
-  [5] = function(x, y) return x - 1, y - (x % 2) end, --northwest
+  [0] = function(x, y, d) return x, y - 1 * d end, --north
+  [1] = function(x, y, d) return x + 1, y - mathx.floor(d / 2) - (x % 2) end, --northeast
+  [2] = function(x, y, d) return x + 1, y + mathx.floor(d / 2) + 1 - (x % 2) end, --southeast
+  [3] = function(x, y, d) return x, y + 1 * d end, --south
+  [4] = function(x, y, d) return x - 1, y + mathx.floor(d / 2) + 1 - (x % 2) end, --southwest
+  [5] = function(x, y, d) return x - 1, y - mathx.floor(d / 2) - (x % 2) end, --northwest
 }
 
 local function direction(value)
@@ -33,8 +33,8 @@ local function direction(value)
     end
   end
 
-  function dir:translate(x, y)
-    return translations[self.value](x, y)
+  function dir:translate(x, y, distance)
+    return translations[self.value](x, y, distance or 1)
   end
 
   return dir

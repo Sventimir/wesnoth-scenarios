@@ -74,5 +74,6 @@ mathx = {
   -- end,
   choose_random = function(tbl)
     return tbl[mathx._random_gen() % #tbl]
-  end
+  end,
+  floor = math.floor
 }
