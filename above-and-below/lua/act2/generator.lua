@@ -39,7 +39,9 @@ function labirynth(cfg)
     local here = self.gen_path[1]
     local target = here:neighbour(dir)
     target.open_from = nil
-    target.terrain = terrain
+    if target.terrain == "Xu" then
+      target.terrain = terrain
+    end
     self:tag_open_from(nil, here:neighbour(dir:counterclockwise()))
     local dir_to_mark = dir:clockwise()
     self:tag_open_from(nil, here:neighbour(dir_to_mark))
@@ -55,36 +57,45 @@ function labirynth(cfg)
     return target
   end
 
+  function labirynth:chamber(terrain)
+    local here = self.gen_path[1]
+    local hexes = { here }
+    for dir in generator.direction.all() do
+      local neighbour = here:neighbour(dir)
+      neighbour.terrain = terrain
+      self:tag_open_from(here, neighbour)
+      table.insert(hexes, neighbour)
+      for _, r in ipairs({0, 1, 5}) do
+        local wall = neighbour:neighbour(dir:rotate(r))
+        if wall and wall.open_from == true then
+          self:tag_open_from(neighbour, wall)
+        end
+      end
+    end
+    return hexes
+  end
+
   function labirynth:init(start)
     table.insert(self.gen_path, 1, start)
-    self.gen_path[1].open_from = nil
-    self.gen_path[1].terrain = "Ker"
-    self.gen_path[1].label = labirynth.gen_turn
-
-    local dir = generator.direction.random()
-    self:gen_step(dir, "Cer")
-    dir = dir:rotate(2)
-    for i = 1, 5 do
-      self:gen_step(dir, "Cer")
-      dir = dir:clockwise()
-    end
+    start.open_from = nil
+    start.terrain = "Ker"
+    start.label = labirynth.gen_turn
+    self:chamber("Cer")
+    table.insert(self.gen_path, 1, start:neighbour(generator.direction.random()))
   end
 
   function labirynth:enterance_chamber(center, terrain)
     self.enterance = self.gen_path[1]
     self.enterance.terrain = center
-    self.enterance.starting_player = 1
-    self.starting_locations[1] = self.enterance
-    local player_to_place = 2
-    local dir = generator.direction.random()
-    for _ = 1, 6 do
-      target = self:path_to(dir, terrain)
-      if player_to_place <= cfg.player_count and not target:on_border() then
-        target.starting_player = player_to_place
-        self.starting_locations[player_to_place] = target
-        player_to_place = player_to_place + 1
-      end
-      dir = dir:clockwise()
+    local hexes = self:chamber(terrain)
+    local next_hex = filter(
+      function(hex) return hex:on_border() == nil end,
+      iter(hexes)
+    )
+    for i = 1, cfg.player_count do
+      local hex = next_hex()
+      hex.starting_player = i
+      self.starting_locations[i] = hex
     end
     return self:gen_backstep()
   end
@@ -99,11 +110,8 @@ function labirynth(cfg)
 
   function labirynth:exit_chamber(terrain)
     self.exit = self.gen_path[1]
-    local dir = generator.direction.random()
-    for _ = 1, 6 do
-      self:path_to(dir, terrain)
-      dir = dir:clockwise()
-    end
+    self.exit.terrain = terrain
+    self:chamber(terrain)
     return self:gen_backstep()
   end
 
@@ -146,7 +154,7 @@ function labirynth(cfg)
     end
     if #neighbours > 0 then
       local dir = neighbours[mathx.random(1, #neighbours)]
-      labirynth:gen_step(dir, "Uu")
+      labirynth:gen_step(dir, "Ur")
     else
       labirynth:gen_backstep()
     end
