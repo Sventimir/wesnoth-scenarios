@@ -9,6 +9,28 @@ local function hex(map, x, y, terrain)
     return map:get(dir:translate(self.x, self.y))
   end
 
+  function node:on_border()
+    local dir = ""
+    if self.x == 0 then
+      dir = "n"
+    end
+    if self.x == map.width + 1 then
+        dir = "s"
+    end
+    if self.y == 0 then
+      dir = dir .. "w"
+    end
+    if self.y == map.height + 1 then
+      dir = dir .. "e"
+    end
+
+    if dir == "" then
+      return nil
+    else
+      return dir
+    end
+  end
+
   return node
 end
 
@@ -57,7 +79,7 @@ local function maze_hex(map, x, y, terrain)
   function node:label_turn_visited()
     return {"label", {x = x, y = y, text = node.turn_visited}}
   end
-  
+
   return node
 end
 
