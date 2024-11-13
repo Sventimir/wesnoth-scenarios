@@ -1,3 +1,17 @@
+local function hex(map, x, y, terrain)
+  local node = {
+    x = x,
+    y = y,
+    terrain = terrain or "Gg"
+  }
+
+  function node:neighbour(dir)
+    return map:get(dir:translate(self.x, self.y))
+  end
+
+  return node
+end
+
 local function tag_open_from(tag, node)
   if not node then return end
   if not node.open_from then return end
@@ -8,17 +22,9 @@ local function tag_open_from(tag, node)
   end
 end
 
-local function hex(labirynth, x, y, terrain)
-  local node = {
-    x = x,
-    y = y,
-    terrain = terrain or "Gg",
-    open_from = true
-  }
-  
-  function node:neighbour(dir)
-    return labirynth:get(dir:translate(self.x, self.y))
-  end
+local function maze_hex(map, x, y, terrain)
+  local node = hex(map, x, y, terrain)
+  node.open_from = true
 
   function node:path_open_to(target)
     if target and target.open_from then
@@ -33,9 +39,6 @@ local function hex(labirynth, x, y, terrain)
     local target = self:neighbour(dir)
     target.open_from = nil
     target.terrain = terrain
-    if target.x == 1 or target.x == labirynth.width or target.y == 1 or target.y == labirynth.height then
-      table.insert(labirynth.exits, target)
-    end
     tag_open_from(nil, self:neighbour(dir:counterclockwise()))
     local dir_to_mark = dir:clockwise()
     tag_open_from(nil, self:neighbour(dir_to_mark))
@@ -58,4 +61,7 @@ local function hex(labirynth, x, y, terrain)
   return node
 end
 
-return hex
+return {
+  new = hex,
+  maze_hex = maze_hex
+}

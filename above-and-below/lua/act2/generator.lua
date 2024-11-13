@@ -3,7 +3,7 @@ generator = wesnoth.require("~add-ons/above-and-below/lua/generator/generator.lu
 local player_colors = { "red", "blue", "green" }
 
 function labirynth(cfg)
-  local labirynth = generator.map(cfg.width, cfg.height, "Xu")
+  local labirynth = generator.map(cfg.width, cfg.height, generator.maze_hex, "Xu")
 
   labirynth.gen_turn = 0
   labirynth.gen_path = {}
@@ -27,6 +27,9 @@ function labirynth(cfg)
 
   function labirynth:gen_step(dir, terrain)
     local target = self.gen_path[1]:path_to(dir, terrain)
+    if target.x == 1 or target.x == labirynth.width or target.y == 1 or target.y == labirynth.height then
+      table.insert(labirynth.exits, target)
+    end
     self.gen_turn = self.gen_turn + 1
     target.label = self.gen_turn
     table.insert(self.gen_path, 1, target)

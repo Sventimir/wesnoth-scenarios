@@ -1,4 +1,4 @@
-return function(width, height, terrain)
+return function(width, height, node, terrain)
   local map = {
     width = width,
     height = height,
@@ -8,7 +8,7 @@ return function(width, height, terrain)
   for y = 1, height do
     local row = {}
     for x = 1, width do
-      table.insert(row, generator.hex(map, x, y, terrain))
+      table.insert(row, node(map, x, y, terrain))
     end
     table.insert(map, row)
   end
