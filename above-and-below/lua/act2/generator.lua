@@ -7,7 +7,6 @@ function labirynth(cfg)
 
   labirynth.gen_turn = 0
   labirynth.gen_path = {}
-  labirynth.exits = {}
   labirynth.starting_locations = {}
 
   function labirynth:init(start)
@@ -25,21 +24,67 @@ function labirynth(cfg)
     end
   end
 
-  function labirynth:gen_step(dir, terrain)
-    local target = self.gen_path[1]:path_to(dir, terrain)
-    if target.x == 1 or target.x == labirynth.width or target.y == 1 or target.y == labirynth.height then
-      table.insert(labirynth.exits, target)
+  function labirynth:enterance_chamber(center, terrain)
+    self.enterance = self.gen_path[1]
+    self.enterance.terrain = center
+    self.enterance.starting_player = 1
+    self.starting_locations[1] = self.enterance
+    local player_to_place = 2
+    local dir = generator.direction.random()
+    for _ = 1, 6 do
+      target = self.enterance:path_to(dir, terrain)
+      if player_to_place <= cfg.player_count and not target:on_border() then
+        target.starting_player = player_to_place
+        self.starting_locations[player_to_place] = target
+        player_to_place = player_to_place + 1
+      end
+      dir = dir:clockwise()
     end
-    self.gen_turn = self.gen_turn + 1
-    target.label = self.gen_turn
-    table.insert(self.gen_path, 1, target)
+    self:gen_backstep()
+  end
+
+  function labirynth:appropriate_enterance()
+    local here = self.gen_path[1]
+    return (self.exit.x == 1 and here.x == self.width) or
+      (self.exit.x == self.width and here.x == 1) or
+      (self.exit.y == 1 and here.y == self.height) or
+      (self.exit.y == self.height and here.y == 1)
+  end
+
+  function labirynth:exit_chamber(terrain)
+    self.exit = self.gen_path[1]
+    local dir = generator.direction.random()
+    for _ = 1, 6 do
+      self.exit:path_to(dir, terrain)
+      dir = dir:clockwise()
+    end
+    self:gen_backstep()
+  end
+
+  function labirynth:gen_step(dir, terrain)
+    local src = self.gen_path[1]
+    local target = src:neighbour(dir)
+    if target:on_border() then
+      if not self.exit then
+        return self:exit_chamber("Ur^Ii")
+      end
+      if not self.enterance and self:appropriate_enterance()  then
+        return self:enterance_chamber("Ker", "Cer")
+      end
+      self:gen_backstep()
+    else
+      src:path_to(dir, terrain)
+      self.gen_turn = self.gen_turn + 1
+      target.label = self.gen_turn
+      table.insert(self.gen_path, 1, target)
+    end
   end
 
   function labirynth:gen_backstep()
     table.remove(self.gen_path, 1)
   end
 
-  labirynth.boss_start = labirynth:get(mathx.random(2, cfg.width - 1), mathx.random(2, cfg.height - 1))
+  labirynth.boss_start = labirynth:get(mathx.random(3, cfg.width - 2), mathx.random(3, cfg.height - 2))
   labirynth:init(labirynth.boss_start)
 
   while labirynth.gen_path[1] do
@@ -58,12 +103,6 @@ function labirynth(cfg)
     end
   end
 
-  for i = 1, cfg.player_count do
-    local l = table.remove(labirynth.exits, mathx.random(1, #labirynth.exits))
-    l.starting_player = i
-    table.insert(labirynth.starting_locations, l)
-  end
-
   return labirynth
 end
 
@@ -73,6 +112,15 @@ function generate_labirynth_scenario(cfg)
 
   scenario.map_data = labirynth:as_map_data()
 
+  local signpost = {
+    image="scenery/signpost.png",
+    submerge=1,
+    visible_in_fog=true,
+    x=labirynth.exit.x,
+    y=labirynth.exit.y
+  }
+  table.insert(scenario, {"item", signpost})
+  
   for player_id = 1, cfg.player_count do
     local leader_loc = labirynth.starting_locations[player_id]
     local side = {
