@@ -1,5 +1,4 @@
-hex = wesnoth.require("~add-ons/above-and-below/lua/act2/hex.lua")
-directions = hex.directions
+generator = wesnoth.require("~add-ons/above-and-below/lua/generator/generator.lua")
 
 local player_colors = { "red", "blue", "green" }
 
@@ -16,7 +15,7 @@ function labirynth(cfg)
   for y = 1, cfg.height do
     local row = {}
     for x = 1, cfg.width do
-      table.insert(row, hex.node(labirynth, x, y))
+      table.insert(row, generator.hex(labirynth, x, y))
     end
     table.insert(labirynth, row)
   end
@@ -60,7 +59,7 @@ function labirynth(cfg)
     self.gen_path[1].terrain = "Ker"
     self.gen_path[1].label = labirynth.gen_turn
 
-    local dir = directions.random()
+    local dir = generator.direction.random()
     self:gen_step(dir, "Cer")
     dir = dir:rotate(2)
     for i = 1, 5 do
@@ -86,7 +85,7 @@ function labirynth(cfg)
   while labirynth.gen_path[1] do
     local node = labirynth.gen_path[1]
     local neighbours = {}
-    for dir in directions.all() do
+    for dir in generator.direction.all() do
       local neighbour = node:neighbour(dir)
       if node:path_open_to(neighbour) then
         table.insert(neighbours, dir)
