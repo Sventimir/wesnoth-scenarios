@@ -3,55 +3,12 @@ generator = wesnoth.require("~add-ons/above-and-below/lua/generator/generator.lu
 local player_colors = { "red", "blue", "green" }
 
 function labirynth(cfg)
-  local labirynth = {
-    gen_turn = 0,
-    gen_path = {},
-    exits = {},
-    starting_locations = {},
-    width = cfg.width,
-    height = cfg.height
-  }
+  local labirynth = generator.map(cfg.width, cfg.height, "Xu")
 
-  for y = 1, cfg.height do
-    local row = {}
-    for x = 1, cfg.width do
-      table.insert(row, generator.hex(labirynth, x, y))
-    end
-    table.insert(labirynth, row)
-  end
-
-  function labirynth:get(x, y)
-    return (self[y] or {})[x]
-  end
-
-  function labirynth:as_map()
-    local map = ""
-    for x = 0, cfg.width + 1 do
-      map = map .. "Xu"
-      if x < cfg.width + 1 then
-        map = map .. ", "
-      else
-        map = map .. "\n"
-      end
-    end
-    for y, row in ipairs(self) do
-      map = map .. "Xu, "
-      for x, node in ipairs(row) do
-        if node.starting_player then
-          map = map .. node.starting_player .. " "
-        end
-        map = map .. node.terrain .. ", "
-      end
-      map = map .. "Xu\n"
-    end
-    for x = 0, cfg.width + 1 do
-      map = map .. "Xu"
-      if x < cfg.width + 1 then
-        map = map .. ", "
-      end
-    end
-    return map
-  end
+  labirynth.gen_turn = 0
+  labirynth.gen_path = {}
+  labirynth.exits = {}
+  labirynth.starting_locations = {}
 
   function labirynth:init(start)
     table.insert(self.gen_path, 1, start)
@@ -111,7 +68,7 @@ function generate_labirynth_scenario(cfg)
   local scenario = wesnoth.require("~add-ons/above-and-below/lua/act2/scenario_template.lua")
   local labirynth = labirynth(cfg)
 
-  scenario.map_data = labirynth:as_map()
+  scenario.map_data = labirynth:as_map_data()
 
   for player_id = 1, cfg.player_count do
     local leader_loc = labirynth.starting_locations[player_id]

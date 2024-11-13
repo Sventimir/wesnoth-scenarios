@@ -8,11 +8,11 @@ local function tag_open_from(tag, node)
   end
 end
 
-local function hex(labirynth, x, y)
+local function hex(labirynth, x, y, terrain)
   local node = {
     x = x,
     y = y,
-    terrain = "Xu",
+    terrain = terrain or "Gg",
     open_from = true
   }
   
