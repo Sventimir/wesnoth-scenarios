@@ -2,12 +2,58 @@ generator = wesnoth.require("~add-ons/above-and-below/lua/generator/generator.lu
 
 local player_colors = { "red", "blue", "green" }
 
+local function hex(labirynth, x, y, terrain)
+  local node = generator.hex.new(labirynth, x, y, terrain)
+  node.open_from = true
+  return node
+end
+
 function labirynth(cfg)
-  local labirynth = generator.map(cfg.width, cfg.height, generator.maze_hex, "Xu")
+  local labirynth = generator.map(cfg.width, cfg.height, hex, "Xu")
 
   labirynth.gen_turn = 0
   labirynth.gen_path = {}
   labirynth.starting_locations = {}
+
+  function labirynth:path_open_to(target)
+    local here = self.gen_path[1]
+    if target and target.open_from then
+      local open_from = target.open_from
+      return open_from == true or (open_from.x == here.x and open_from.y == here.y)
+    else
+      return false
+    end
+  end
+
+  function labirynth:tag_open_from(tag, node)
+    if not node then return end
+    if not node.open_from then return end
+    if node.open_from == true then
+      node.open_from = tag
+    else
+      node.open_from = (tag and tag.x == node.open_from.x and tag.y == node.open_from.y and tag) or nil
+    end
+  end
+
+  function labirynth:path_to(dir, terrain)
+    local here = self.gen_path[1]
+    local target = here:neighbour(dir)
+    target.open_from = nil
+    target.terrain = terrain
+    self:tag_open_from(nil, here:neighbour(dir:counterclockwise()))
+    local dir_to_mark = dir:clockwise()
+    self:tag_open_from(nil, here:neighbour(dir_to_mark))
+    for i = 1, 3 do
+      dir_to_mark = dir_to_mark:clockwise()
+      self:tag_open_from(here, here:neighbour(dir_to_mark))
+    end
+    local target_dir = dir:opposite():clockwise()
+    for i = 1, 3 do
+      target_dir = target_dir:clockwise()
+      self:tag_open_from(target, target:neighbour(target_dir))
+    end
+    return target
+  end
 
   function labirynth:init(start)
     table.insert(self.gen_path, 1, start)
@@ -32,7 +78,7 @@ function labirynth(cfg)
     local player_to_place = 2
     local dir = generator.direction.random()
     for _ = 1, 6 do
-      target = self.enterance:path_to(dir, terrain)
+      target = self:path_to(dir, terrain)
       if player_to_place <= cfg.player_count and not target:on_border() then
         target.starting_player = player_to_place
         self.starting_locations[player_to_place] = target
@@ -55,7 +101,7 @@ function labirynth(cfg)
     self.exit = self.gen_path[1]
     local dir = generator.direction.random()
     for _ = 1, 6 do
-      self.exit:path_to(dir, terrain)
+      self:path_to(dir, terrain)
       dir = dir:clockwise()
     end
     self:gen_backstep()
@@ -73,7 +119,7 @@ function labirynth(cfg)
       end
       self:gen_backstep()
     else
-      src:path_to(dir, terrain)
+      self:path_to(dir, terrain)
       self.gen_turn = self.gen_turn + 1
       target.label = self.gen_turn
       table.insert(self.gen_path, 1, target)
@@ -92,7 +138,7 @@ function labirynth(cfg)
     local neighbours = {}
     for dir in generator.direction.all() do
       local neighbour = node:neighbour(dir)
-      if node:path_open_to(neighbour) then
+      if labirynth:path_open_to(neighbour) then
         table.insert(neighbours, dir)
       end
     end
