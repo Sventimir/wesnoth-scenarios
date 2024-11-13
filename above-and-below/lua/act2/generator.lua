@@ -86,7 +86,7 @@ function labirynth(cfg)
       end
       dir = dir:clockwise()
     end
-    self:gen_backstep()
+    return self:gen_backstep()
   end
 
   function labirynth:appropriate_enterance()
@@ -104,7 +104,7 @@ function labirynth(cfg)
       self:path_to(dir, terrain)
       dir = dir:clockwise()
     end
-    self:gen_backstep()
+    return self:gen_backstep()
   end
 
   function labirynth:gen_step(dir, terrain)
@@ -115,19 +115,21 @@ function labirynth(cfg)
         return self:exit_chamber("Ur^Ii")
       end
       if not self.enterance and self:appropriate_enterance()  then
-        return self:enterance_chamber("Ker", "Cer")
+        return self:enterance_chamber("Ke", "Ce")
       end
-      self:gen_backstep()
+      return self:gen_backstep()
     else
       self:path_to(dir, terrain)
       self.gen_turn = self.gen_turn + 1
       target.label = self.gen_turn
       table.insert(self.gen_path, 1, target)
+      return target
     end
   end
 
   function labirynth:gen_backstep()
     table.remove(self.gen_path, 1)
+    return self.gen_path[1]
   end
 
   labirynth.boss_start = labirynth:get(mathx.random(3, cfg.width - 2), mathx.random(3, cfg.height - 2))
@@ -143,7 +145,8 @@ function labirynth(cfg)
       end
     end
     if #neighbours > 0 then
-      labirynth:gen_step(neighbours[mathx.random(1, #neighbours)], "Uu")
+      local dir = neighbours[mathx.random(1, #neighbours)]
+      labirynth:gen_step(dir, "Uu")
     else
       labirynth:gen_backstep()
     end
