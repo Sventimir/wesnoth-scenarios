@@ -75,13 +75,32 @@ function labirynth(cfg)
     return hexes
   end
 
-  function labirynth:init(start)
-    table.insert(self.gen_path, 1, start)
-    start.open_from = nil
-    start.terrain = "Ker"
-    start.label = labirynth.gen_turn
+  function labirynth:generate(start)
+    self.boss_start = self:get(mathx.random(3, cfg.width - 2), mathx.random(3, cfg.height - 2))
+    table.insert(self.gen_path, 1, self.boss_start)
+    self.boss_start.open_from = nil
+    self.boss_start.terrain = "Ker"
+    self.boss_start.label = labirynth.gen_turn
     self:chamber("Cer")
-    table.insert(self.gen_path, 1, start:neighbour(generator.direction.random()))
+    table.insert(self.gen_path, 1, self.boss_start:neighbour(generator.direction.random()))
+
+    while labirynth.gen_path[1] do
+      local node = labirynth.gen_path[1]
+      local neighbours = {}
+      for dir in generator.direction.all() do
+        local neighbour = node:neighbour(dir)
+        if labirynth:path_open_to(neighbour) then
+          table.insert(neighbours, dir)
+        end
+      end
+      if #neighbours > 0 then
+      local dir = neighbours[mathx.random(1, #neighbours)]
+      labirynth:gen_step(dir, "Ur")
+      else
+        labirynth:gen_backstep()
+      end
+  end
+
   end
 
   function labirynth:enterance_chamber(center, terrain)
@@ -140,32 +159,13 @@ function labirynth(cfg)
     return self.gen_path[1]
   end
 
-  labirynth.boss_start = labirynth:get(mathx.random(3, cfg.width - 2), mathx.random(3, cfg.height - 2))
-  labirynth:init(labirynth.boss_start)
-
-  while labirynth.gen_path[1] do
-    local node = labirynth.gen_path[1]
-    local neighbours = {}
-    for dir in generator.direction.all() do
-      local neighbour = node:neighbour(dir)
-      if labirynth:path_open_to(neighbour) then
-        table.insert(neighbours, dir)
-      end
-    end
-    if #neighbours > 0 then
-      local dir = neighbours[mathx.random(1, #neighbours)]
-      labirynth:gen_step(dir, "Ur")
-    else
-      labirynth:gen_backstep()
-    end
-  end
-
   return labirynth
 end
 
 function generate_labirynth_scenario(cfg)
   local scenario = wesnoth.require("~add-ons/above-and-below/lua/act2/scenario_template.lua")
   local labirynth = labirynth(cfg)
+  labirynth:generate()
 
   scenario.map_data = labirynth:as_map_data()
 
