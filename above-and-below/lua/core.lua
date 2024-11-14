@@ -2,9 +2,9 @@ if not pcall(function() return require end) then
   require = wesnoth.require
 end
 
-function as_table(iter)
+function as_table(iter, state, ctrl)
   local t = {}
-  for item in iter do
+  for item in iter, state, ctrl do
     table.insert(t, item)
   end
   return t
@@ -18,65 +18,68 @@ function iter(tbl)
   end
 end
 
-function take(n, iter)
+function take(n, iter, state, ctrl)
   local i = 0
-  return function()
+  return function(_, ctrl)
     i = i + 1
     if i <= n then
-      return iter()
+      return iter(state, ctrl)
     end
   end
 end
 
 
-function drop(n, iter)
+function drop(n, iter, state, ctrl)
   for _ = 1, n do
     iter()
   end
-  return function()
-    return iter()
+  return function(_, ctrl)
+    return iter(state, ctrl)
   end
 end
 
 
-function map(f, iter)
-  return function()
-    local item = iter()
-    if item == nil then
+function map(f, iter, state, ctrl)
+  local state = { ctrl = ctrl, intern = state }
+  return function(_, ctrl)
+    state.ctrl = iter(state.intern, state.ctrl)
+    if state.ctrl == nil then
       return nil
     else
-      return f(item)
+      return f(state.ctrl)
     end
   end
 end
 
-function fold(f, acc, iter)
+function fold(f, acc, iter, state, ctrl)
   local res = acc
-  for item in iter do
+  for item in iter, state, ctrl do
     res = f(res, item)
   end
   return res
 end
 
-function filter(predicate, iter)
-  return function()
-    local item = iter()
-    while item ~= nil and not predicate(item) do
-      item = iter()
+function filter(predicate, iter, state, ctrl)
+  local state = { ctrl = ctrl, intern = state }
+  return function(_, ctrl)
+    state.ctrl = iter(state.intern, state.ctrl)
+    while state.ctrl ~= nil and not predicate(state.ctrl) do
+      state.ctrl = iter(state.intern, state.ctrl)
     end
-    return item
+    return state.ctrl
   end
 end
 
-function filter_map(f, iter)
+function filter_map(f, iter, state, ctrl)
+  local state = { ctrl = ctrl, intern = state }
   return function()
-    local item = iter()
-    while item ~= nil do
-      local res = f(item)
+    state.ctrl = iter(state.intern, state.ctrl)
+    while state.ctrl ~= nil do
+      local res = f(state.ctrl)
       if res ~= nil then
         return res
       else
-        item = iter()
+        state.ctrl = iter(state.intern, state.ctrl)
       end
     end
   end
