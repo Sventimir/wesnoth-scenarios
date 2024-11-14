@@ -138,7 +138,7 @@ function labirynth(cfg)
     local src = self.gen_path[1]
     local target = src:neighbour(dir)
     if target:on_border() then
-      if not self.exit then
+      if not self.exit and self.gen_turn > 10 then
         return self:exit_chamber("Ur^Ii")
       end
       if not self.enterance and self:appropriate_enterance()  then
