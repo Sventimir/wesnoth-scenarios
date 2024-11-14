@@ -1,3 +1,5 @@
+local direction = wesnoth.require("~add-ons/above-and-below/lua/generator/direction.lua")
+
 local function hex(map, x, y, terrain)
   local node = {
     x = x,
@@ -29,6 +31,26 @@ local function hex(map, x, y, terrain)
     else
       return dir
     end
+  end
+
+  function node:circle(radius)
+    local function it(state, current)
+      if state.step < radius then
+        state.step = state.step + 1
+      else
+        if state.dir.value == direction.ne.value then
+          return
+        else
+          state.step = 1
+          state.dir = state.dir:clockwise()
+        end
+      end
+      local x, y = state.dir:translate(current.x, current.y)
+      local node = map:get(x, y)
+      return node or it(state, { x = x, y = y })
+    end
+    local state = { dir = direction.se, step = 0 }
+    return it, state, { x = self.x, y = self.y - radius }
   end
 
   return node
