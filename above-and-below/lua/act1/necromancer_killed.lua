@@ -36,7 +36,7 @@ vampiric_necklace:grant({ id = apprentice.id }, { silent = true })
 
 function is_mage(u)
   local side = wesnoth.sides[u.side]
-  return any(iter(side.recruit), function(unit_type) return unit_type == "Mage" end)
+  return any(function(unit_type) return unit_type == "Mage" end, iter(side.recruit))
 end
 
 local leaders = players.heroes()
@@ -56,6 +56,7 @@ local killer = wesnoth.units.find_on_map({
 -- players, one of them will be chosen at random if a non-mage killed
 -- the necromancer.
 local negotiator = any(
+  nil,
   chain(
     filter(is_mage, iter({ killer })),
     filter(is_mage, iter(leaders)),

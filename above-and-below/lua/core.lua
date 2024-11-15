@@ -59,8 +59,8 @@ function fold(f, acc, iter, state, ctrl)
   return res
 end
 
-function filter(predicate, iter, state, ctrl)
-  local state = { ctrl = ctrl, intern = state }
+function filter(predicate, iter, iter_state, ctrl)
+  local state = { ctrl = ctrl, intern = iter_state }
   return function(_, ctrl)
     state.ctrl = iter(state.intern, state.ctrl)
     while state.ctrl ~= nil and not predicate(state.ctrl) do
@@ -82,6 +82,14 @@ function filter_map(f, iter, state, ctrl)
         state.ctrl = iter(state.intern, state.ctrl)
       end
     end
+  end
+end
+
+function pack_iter(iter, state, ctrl)
+  local state = { ctrl = ctrl, intern = state }
+  return function()
+    state.ctrl = iter(state.intern, state.ctrl)
+    return state.ctrl
   end
 end
 
@@ -121,16 +129,16 @@ function chain(...)
 end
 
 -- Returns the first item (if any) in the iterator that satisfies the predicate.
-function any(iterator, f)
-  for item in iterator do
+function any(f, iter, state, ctrl)
+  for item in iter, state, ctrl do
     if f == nil or f(item) then
       return item
     end
   end
 end
 
-function all(f, iterator)
-  for item in iterator do
+function all(f, iter, state, ctrl)
+  for item in iter, state, ctrl do
     if not f(item) then
       return false
     end

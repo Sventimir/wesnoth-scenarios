@@ -1,8 +1,8 @@
 -- Define various magical abilities and items
 function is_magical(attack)
   return any(
-    iter(attack.specials),
-    function(special) return special[2].id == "magical" end
+    function(special) return special[2].id == "magical" end,
+    iter(attack.specials)
   )
 end
 
@@ -43,8 +43,8 @@ function item(props)
         action = function()
           local unit = wesnoth.units.find_on_map(self.location)[1]
           local ranged_attack = any(
-            iter(unit.attacks),
-            function(attack) return attack.range == "ranged" and is_magical(attack) end
+            function(attack) return attack.range == "ranged" and is_magical(attack) end,
+            iter(unit.attacks)
           )
           if ranged_attack then
             self:grant({ id = unit.id }, options)
