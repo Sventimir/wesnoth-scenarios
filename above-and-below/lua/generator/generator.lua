@@ -1,5 +1,5 @@
 return {
-  direction = wesnoth.require("~add-ons/above-and-below/lua/generator/direction.lua"),
-  hex = wesnoth.require("~add-ons/above-and-below/lua/generator/hex.lua"),
-  map = wesnoth.require("~add-ons/above-and-below/lua/generator/map.lua")
+  Vec = wesnoth.require("~add-ons/above-and-below/lua/generator/cubic_vector.lua"),
+  Hex = wesnoth.require("~add-ons/above-and-below/lua/generator/hex.lua"),
+  Map = wesnoth.require("~add-ons/above-and-below/lua/generator/map.lua")
 }
