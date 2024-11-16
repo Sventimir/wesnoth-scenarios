@@ -62,18 +62,8 @@ wml = {
   }
 }
 
-mathx = {
-  -- since this is just a mock, we want randomness to be predictable.
-  random = math.random,
-  -- random = function(lower, upper)
-  --   if upper == lower then
-  --     return lower
-  --   else
-  --     return random_gen() %  (upper - lower) + lower
-  --   end
-  -- end,
-  choose_random = function(tbl)
-    return tbl[mathx._random_gen() % #tbl]
-  end,
-  floor = math.floor
-}
+mathx = math
+
+mathx.choose_random = function(tbl)
+  return tbl[mathx._random_gen() % #tbl]
+end
