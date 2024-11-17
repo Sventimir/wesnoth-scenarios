@@ -31,8 +31,9 @@ function Vec:__tostring()
   return string.format("[%d, %d, %d]", self:sw(), self.s, self.se)
 end
 
-function Vec:scale(f)
-  return Vec.new(mathx.floor(self.s * f), mathx.floor(self.se * f))
+function Vec:scale(f, round)
+  local rnd = round or mathx.floor
+  return Vec.new(rnd(self.s * f), rnd(self.se * f))
 end
 
 function Vec:translate(x, y)
@@ -42,6 +43,25 @@ end
 
 function Vec:length()
   return mathx.max(mathx.abs(self.s), mathx.abs(self.se), mathx.abs(self.s + self.se))
+end
+
+function Vec:contains(v)
+  return int.signum(self.s) == int.signum(v.s) and mathx.abs(self.s) >= mathx.abs(v.s)
+    and int.signum(self.se) == int.signum(v.se) and mathx.abs(self.se) >= mathx.abs(v.se)
+end
+
+function Vec:split_into_unitary()
+  local function it(state)
+    local s = int.signum(state.remainder.s)
+    local se = int.signum(state.remainder.se)
+    if s == 0 and se == 0 then
+      return nil
+    end
+    local v = s == se and Vec.new(s, 0) or Vec.new(s, se)
+    state.remainder = state.remainder - v
+    return v
+  end
+  return it, { remainder = self }
 end
 
 -- We've got two possibilities. Either self.s and self.se have the same sign,
@@ -69,7 +89,7 @@ function Vec.equidistant(radius)
   )
 end
 
-Vec.eigenvector = {
+Vec.unitary = {
   n = Vec.new(-1, 0), -- 1
   ne = Vec.new(-1, 1), -- 2
   se = Vec.new(0, 1), -- 5
@@ -78,30 +98,30 @@ Vec.eigenvector = {
   nw = Vec.new(0, -1) -- 3
 }
 
-function Vec.eigenvector.id(v)
+function Vec.unitary.id(v)
   return (v.s + 1) * 3 + v.se + 1
 end
 
 local eigenvector_names = { [0] = "n", "ne", "se", "s", "sw", "nw" }
 
-function Vec.eigenvector.random()
-  return Vec.eigenvector[eigenvector_names[mathx.random(0, 5)]]
+function Vec.unitary.random()
+  return Vec.unitary[eigenvector_names[mathx.random(0, 5)]]
 end
 
 -- Return a triplet of 3 eigenvectors that are not equal and not opposite of each other.
-function Vec.eigenvector.random_triplet()
+function Vec.unitary.random_triplet()
   local choice = mathx.random(0, 5)
-  return Vec.eigenvector[eigenvector_names[choice]],
-    Vec.eigenvector[eigenvector_names[(choice + 1) % 6]],
-    Vec.eigenvector[eigenvector_names[(choice + 2) % 6]]
+  return Vec.unitary[eigenvector_names[choice]],
+    Vec.unitary[eigenvector_names[(choice + 1) % 6]],
+    Vec.unitary[eigenvector_names[(choice + 2) % 6]]
 end
 
-function Vec.eigenvector.clockwise(v)
+function Vec.unitary.clockwise(v)
   return Vec.new(v.s + v.se, -v.s)
 end
 
-function Vec.eigenvector.counterclockwise(v)
-  return Vec.new(-v.se, v.se + v.s)
+function Vec.unitary.counterclockwise(v)
+    return Vec.new(-v.se, v.se + v.s)
 end
 
 return Vec
