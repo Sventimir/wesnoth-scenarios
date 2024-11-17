@@ -41,14 +41,15 @@ end
 
 function map(f, iter, state, ctrl)
   local state = { ctrl = ctrl, intern = state }
-  return function(_, ctrl)
+  local function it()
     state.ctrl = iter(state.intern, state.ctrl)
     if state.ctrl == nil then
       return nil
     else
-      return f(state.ctrl)
+      return f(state.ctrl) or it()
     end
   end
+  return it
 end
 
 function fold(f, acc, iter, state, ctrl)
