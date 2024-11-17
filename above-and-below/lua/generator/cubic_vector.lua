@@ -31,8 +31,9 @@ function Vec:__tostring()
   return string.format("[%d, %d, %d]", self:sw(), self.s, self.se)
 end
 
-function Vec:scale(f)
-  return Vec.new(mathx.floor(self.s * f), mathx.floor(self.se * f))
+function Vec:scale(f, round)
+  local rnd = round or mathx.floor
+  return Vec.new(rnd(self.s * f), rnd(self.se * f))
 end
 
 function Vec:translate(x, y)
