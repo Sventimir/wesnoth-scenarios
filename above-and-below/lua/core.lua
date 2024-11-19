@@ -19,34 +19,35 @@ function iter(tbl)
 end
 
 function take(n, iter, state, ctrl)
-  local i = 0
-  return function(_, ctrl)
-    i = i + 1
-    if i <= n then
-      return iter(state, ctrl)
+  local s = { intern = state, ctrl = ctrl, n = n }
+  return function()
+    if n > 0 then
+      s.ctrl = iter(s.intern, s.ctrl)
+      return s.ctrl
     end
   end
 end
 
 
 function drop(n, iter, state, ctrl)
+  local s = { inter = state, ctrl = ctrl }
   for _ = 1, n do
-    iter()
+    s.ctrl = iter(s.intern, s.ctrl)
   end
-  return function(_, ctrl)
-    return iter(state, ctrl)
+  return function()
+    return iter(s.intern, s.ctrl)
   end
 end
 
 
 function map(f, iter, state, ctrl)
-  local state = { ctrl = ctrl, intern = state }
+  local s = { ctrl = ctrl, intern = state }
   local function it()
-    state.ctrl = iter(state.intern, state.ctrl)
-    if state.ctrl == nil then
+    s.ctrl = iter(s.intern, s.ctrl)
+    if s.ctrl == nil then
       return nil
     else
-      return f(state.ctrl) or it()
+      return f(s.ctrl) or it()
     end
   end
   return it
@@ -72,30 +73,30 @@ function filter(predicate, iter, iter_state, ctrl)
 end
 
 function filter_map(f, iter, state, ctrl)
-  local state = { ctrl = ctrl, intern = state }
+  local s = { ctrl = ctrl, intern = state }
   return function()
-    state.ctrl = iter(state.intern, state.ctrl)
-    while state.ctrl ~= nil do
-      local res = f(state.ctrl)
+    s.ctrl = iter(s.intern, s.ctrl)
+    while s.ctrl ~= nil do
+      local res = f(s.ctrl)
       if res ~= nil then
         return res
       else
-        state.ctrl = iter(state.intern, state.ctrl)
+        s.ctrl = iter(s.intern, s.ctrl)
       end
     end
   end
 end
 
 function pack_iter(iter, state, ctrl)
-  local state = { ctrl = ctrl, intern = state }
+  local s = { ctrl = ctrl, intern = state }
   return function()
-    state.ctrl = iter(state.intern, state.ctrl)
-    return state.ctrl
+    s.ctrl = iter(s.intern, s.ctrl)
+    return s.ctrl
   end
 end
 
 function zip(iter1, iter2)
-  return function() 
+  return function()
     local x = iter1()
     local y = iter2()
     if x and y then
