@@ -79,8 +79,10 @@ EnteranceChamber = Castle:new("Ke", "Ce")
 EnteranceChamber.__index = EnteranceChamber
 
 function EnteranceChamber:generate(m)
-  m:deregister_location_constructor("enterance_chamber")
-  m.enterance = Castle.generate(self, m)
+  table.insert(m.starting_locations, Castle.generate(self, m))
+  if #m.starting_locations >= m.player_count then
+    m:deregister_location_constructor("enterance_chamber")
+  end
   m:gen_backstep()
 end
 

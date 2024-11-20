@@ -88,21 +88,21 @@ function Maze:generate()
     end
   end
 
-  local starting_locations = zip(
-    take(self.player_count, int.nats()),
-    filter(
-      function(h) return not h:on_border() end,
-      iter(self.enterance)
-    )
-  )
-  for i, loc in starting_locations do
-    loc.starting_player = i
-    self.starting_locations[i] = loc
+  local location = 1
+  local location_hex = 1
+  local player_starts = {}
+  while #player_starts < self.player_count do
+    local h = self.starting_locations[location][location_hex]
+    h.starting_player = #player_starts + 1
+    table.insert(player_starts, h)
+    if location == #self.starting_locations then
+      location_hex = location_hex + 1
+      location = 1
+    else
+      location = location + 1
+    end
   end
-  assert(
-    #self.starting_locations == self.player_count,
-    string.format("Wrong number of starting locations: %s", #self.starting_locations)
-  )
+  self.starting_locations = player_starts
 end
 
 function Maze:gen_backstep()
