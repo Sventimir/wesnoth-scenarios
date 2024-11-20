@@ -1,6 +1,7 @@
 Vec = wesnoth.require("~add-ons/above-and-below/lua/generator/cubic_vector.lua")
 Hex = wesnoth.require("~add-ons/above-and-below/lua/generator/hex.lua")
 Map = wesnoth.require("~add-ons/above-and-below/lua/generator/map.lua")
+Location = wesnoth.require("~add-ons/above-and-below/lua/act2/location.lua")
 
 local player_colors = { "red", "blue", "green" }
 
@@ -45,12 +46,11 @@ end
 function Maze:generate()
   self.genesis = self.map:get(mathx.random(3, self.map.width - 2), mathx.random(3, self.map.height - 2))
   table.insert(self.gen_path, 1, self.genesis)
-  self.genesis:seal()
-  self.genesis.terrain = "Ker"
   if self.debug then
     self.genesis.label = self.gen_turn
   end
-  self:chamber("Cer")
+  local genesis_chamber = Location.castle:new("Ker", "Cer")
+  genesis_chamber:generate(self)
 
   while self.gen_path[1] do
     local here = self.gen_path[1]
@@ -162,6 +162,10 @@ function Maze:chamber(terrain)
     end
   end
   return hexes
+end
+
+function Maze:here()
+  return self.gen_path[1]
 end
 
 
