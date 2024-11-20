@@ -21,8 +21,9 @@ end
 function take(n, iter, state, ctrl)
   local s = { intern = state, ctrl = ctrl, n = n }
   return function()
-    if n > 0 then
+    if s.n > 0 then
       s.ctrl = iter(s.intern, s.ctrl)
+      s.n = s.n - 1
       return s.ctrl
     end
   end
