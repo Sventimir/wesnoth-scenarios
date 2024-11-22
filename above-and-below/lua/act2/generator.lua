@@ -45,8 +45,10 @@ function Maze.new(cfg)
     exit_chamber = Location.exit_chamber,
   }
   for dir in Vec.equidistant(1) do
-    local constr = Location.narrow_corridor.new(dir, "Uu")
+    local constr = Location.wide_corridor.new(dir, "Uu")
     m.location_constructors[constr:name()] = constr
+    -- constr = Location.narrow_corridor.new(dir, "Uu")
+    -- m.location_constructors[constr:name()] = constr
   end
   return m
 end

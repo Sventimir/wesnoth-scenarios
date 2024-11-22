@@ -58,7 +58,7 @@ function ExitChamber:priority_weight(m)
     (here.x == 1 or here.x == m.map.width or
      here.y == 1 or here.y == m.map.height)
   then
-    return 1000
+    return 10000
   else
     return 0
   end
@@ -95,7 +95,7 @@ function EnteranceChamber:priority_weight(m)
     (here.y == 1 and exit.y == m.map.height) or
     (here.y == m.map.height and exit.y == 1))
   then
-    return 1000
+    return 10000
   else
     return 0
   end
@@ -128,7 +128,7 @@ function NarrowCorridor:generate(m)
     self.dir,
     Vec.unitary.clockwise(self.dir),
     Vec.unitary.counterclockwise(self.dir),
-  }
+    }
   for v in iter(vs) do
     local hex = here:translate(v)
     if hex then
@@ -142,9 +142,98 @@ function NarrowCorridor:generate(m)
   return { target }
 end
 
+WideCorridor = {}
+WideCorridor.__index = WideCorridor
+
+function WideCorridor.new(dir, terrain)
+  return setmetatable({ dir = dir, terrain = terrain }, WideCorridor)
+end
+
+function WideCorridor:name()
+  return string.format("wide_corridor(%s, %s)", self.dir, self.terrain)
+end
+
+function WideCorridor:priority_weight(m)
+  local here = m:here()
+  local vecs = {
+    self.dir,
+    Vec.unitary.clockwise(self.dir),
+    Vec.unitary.counterclockwise(self.dir)
+  }
+  for v in iter(vecs) do
+    local hex = here:translate(v)
+    if not hex or hex:on_border() or not hex:is_open_from(v) then
+      return 0
+    end
+  end
+  return 100
+end
+
+WideCorridor.opposite_dir = {
+  clockwise = "counterclockwise",
+  counterclockwise = "clockwise"
+}
+
+function WideCorridor:mark_adjacent_to_path(hex, v, dir, count)
+  local to_unlock = take(count, Vec.unitary[dir .. "_rotations"](v))
+  hex:mark_adjacent_to_path(table.unpack(as_table(to_unlock)))
+end
+
+function WideCorridor:generate_adjacent_hex(here, dir)
+  local v = Vec.unitary[dir](self.dir)
+  local hex = here:translate(v)
+  if hex.terrain == "Xu" then
+    hex.terrain = self.terrain
+  end
+  self:mark_adjacent_to_path(hex, v, dir, 4)
+end
+
+function WideCorridor:generate(m)
+  local here = m:here()
+  local target = here:translate(self.dir)
+
+  if target.terrain == "Xu" then
+    target.terrain = self.terrain
+  end
+  target:seal()
+
+  self:mark_adjacent_to_path(
+    target:translate(self.dir),
+    Vec.unitary.clockwise(self.dir),
+    "counterclockwise",
+    3
+  )
+
+  for dir in iter({ "clockwise", "counterclockwise" }) do
+    self:generate_adjacent_hex(here, dir)
+    local rotated = Vec.unitary[dir](self.dir)
+    self:mark_adjacent_to_path(
+      target:translate(rotated),
+      Vec.unitary[dir](self.dir),
+      dir,
+      4
+    )
+    self:mark_adjacent_to_path(
+      here:translate(rotated:scale(2)),
+      Vec.unitary[dir](rotated),
+      self.opposite_dir[dir],
+      4
+    )
+    self:mark_adjacent_to_path(
+      here:translate(rotated + Vec.unitary[dir](rotated)),
+      rotated,
+      dir,
+      4
+    )
+  end
+
+  return { target }
+end
+
 return {
   castle = Castle,
   exit_chamber = ExitChamber,
   enterance_chamber = EnteranceChamber,
-  narrow_corridor = NarrowCorridor
+  narrow_corridor = NarrowCorridor,
+  wide_corridor = WideCorridor
 }

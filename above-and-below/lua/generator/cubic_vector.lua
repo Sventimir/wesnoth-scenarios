@@ -124,4 +124,18 @@ function Vec.unitary.counterclockwise(v)
     return Vec.new(-v.se, v.se + v.s)
 end
 
+function Vec.unitary.clockwise_rotations(v)
+  local function it(_, prev)
+    return Vec.unitary.clockwise(prev)
+  end
+  return it, nil, Vec.unitary.counterclockwise(v)
+end
+
+function Vec.unitary.counterclockwise_rotations(v)
+  local function it(_, prev)
+    return Vec.unitary.counterclockwise(prev)
+  end
+  return it, nil, Vec.unitary.clockwise(v)
+end
+
 return Vec
