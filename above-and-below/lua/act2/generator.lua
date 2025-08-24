@@ -135,7 +135,7 @@ function generate_labirynth_scenario(cfg)
   for player_id = 1, cfg.player_count do
     local leader_loc = labirynth.starting_locations[player_id]
     local side = {
-      constroller = "human",
+      controller = "human",
       color = player_colors[player_id],
       faction = "ab-humans",
       faction_lock = true,
